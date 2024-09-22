@@ -1,0 +1,63 @@
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+jspm_packages/
+
+# Firebase config file
+frontend/src/firebase/config.js
+
+# Build directories
+build/
+frontend/build/
+dist/
+frontend/dist/
+
+# Expo files
+frontend/.expo/
+frontend/.expo-shared/
+
+# Coverage directory used by testing tools
+coverage/
+frontend/coverage/
+
+# Environment variables
+.env
+frontend/.env
+
+# Miscellaneous
+.DS_Store
+*.pem
+*.p12
+*.key
+*.crt
+*.csr
+*.der
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# MacOS files
+*.DS_Store
+
+# Windows thumbnail cache files
+Thumbs.db
+ehthumbs.db
+
+# Files that might appear in the root directory
+package-lock.json
+yarn.lock
