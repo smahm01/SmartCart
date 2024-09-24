@@ -13,7 +13,7 @@ yarn-error.log*
 jspm_packages/
 
 # Firebase config file
-frontend/src/firebase/config.js
+frontend/firebase/config.js
 
 # Build directories
 build/
