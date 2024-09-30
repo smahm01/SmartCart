@@ -13,12 +13,31 @@ class User {
         return snapshot.docs.map(doc => new User(doc.id, doc.data().name, doc.data().email));
     }
 
+    static async fetchUser(userId) {
+        const userDoc = doc(firestore, `users/${userId}`);
+        const snapshot = await getDocs(userDoc);
+        return new User(snapshot.id, snapshot.data().name, snapshot.data().email);
+    }
+
     static async addUser(user) {
         const usersCollection = collection(firestore, `users`);
         await addDoc(usersCollection, {
             name: user.name,
             email: user.email,
         });
+    }
+
+    static async updateUser(userId, user) {
+        const userDoc = doc(firestore, `users/${userId}`);
+        await updateDoc(userDoc, {
+            name: user.name,
+            email: user.email,
+        });
+    }
+
+    static async deleteUser(userId) {
+        const userDoc = doc(firestore, `users/${userId}`);
+        await deleteDoc(userDoc);
     }
 }
 

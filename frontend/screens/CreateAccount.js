@@ -8,14 +8,9 @@ export const CreateAccount = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleEnter = () => {
-
+    const handleCreateAccount = () => {
         let user = new User(name, email);
         User.addUser(user);
-
-        console.log('Name:', name);
-        console.log('Email:', email);
-        console.log('Password:', password);
     }
 
     return (
@@ -43,7 +38,7 @@ export const CreateAccount = () => {
             />
             <Button
                 title="Enter"
-                onPress={handleEnter}
+                onPress={handleCreateAccount}
             />
         </View>
     );
