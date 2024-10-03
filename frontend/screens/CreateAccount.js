@@ -144,7 +144,13 @@ export const CreateAccount = ({ navigation }) => {
         });
       }
     } catch (error) {
-      alert(error.message);
+      if (error.code === "auth/email-already-in-use") {
+        alert("Email already in use");
+      } else if (error.code === "auth/invalid-email") {
+        alert("Invalid email");
+      } else {
+        alert(error.message);
+      }
       console.log("Error creating account: ", error.message);
     } finally {
       setLoading(false);
