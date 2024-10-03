@@ -17,6 +17,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import { firestore } from "../firebase/config";
 import { doc, setDoc } from "firebase/firestore";
 import { BackButton } from "../components/BackButton";
+import { styles } from "../styles/CreateAccountSignInStyles";
 
 export const CreateAccount = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -153,14 +154,18 @@ export const CreateAccount = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {loading ? (
-        <ActivityIndicator size="large" color="#EF2A39" />
+        <ActivityIndicator
+          style={styles.activityIndicator}
+          size="large"
+          color="#EF2A39"
+        />
       ) : (
         <KeyboardAvoidingView behavior="padding">
           <View style={styles.header}>
             <BackButton onPress={() => navigation.goBack()} />
             <View style={styles.headerText}>
-              <Text style={styles.createAccount}>Create Account</Text>
-              <Text style={styles.createAccountInfo}>
+              <Text style={styles.title}>Create Account</Text>
+              <Text style={styles.subTitle}>
                 Please create an account to get started
               </Text>
             </View>
@@ -173,7 +178,11 @@ export const CreateAccount = ({ navigation }) => {
               !nameValidated && nameProvided ? styles.invalidInput : null,
             ]}
           >
-            <Ionicons name="person-outline" size={24} color="#EF2A39" />
+            <Ionicons
+              name="person-outline"
+              size={24}
+              color={!nameValidated && nameProvided ? "#000000" : "#EF2A39"}
+            />
             <TextInput
               style={[
                 styles.input,
@@ -201,7 +210,11 @@ export const CreateAccount = ({ navigation }) => {
               !emailValidated && emailProvided ? styles.invalidInput : null,
             ]}
           >
-            <Fontisto name="email" size={24} color="#EF2A39" />
+            <Fontisto
+              name="email"
+              size={24}
+              color={!emailValidated && emailProvided ? "#000000" : "#EF2A39"}
+            />
             <TextInput
               style={[
                 styles.input,
@@ -232,7 +245,15 @@ export const CreateAccount = ({ navigation }) => {
                 : null,
             ]}
           >
-            <Feather name="phone" size={24} color="#EF2A39" />
+            <Feather
+              name="phone"
+              size={24}
+              color={
+                !phoneNumberValidated && phoneNumberProvided
+                  ? "#000000"
+                  : "#EF2A39"
+              }
+            />
             <TextInput
               style={[
                 styles.input,
@@ -264,7 +285,13 @@ export const CreateAccount = ({ navigation }) => {
                 : null,
             ]}
           >
-            <AntDesign name="lock" size={24} color="#EF2A39" />
+            <AntDesign
+              name="lock"
+              size={24}
+              color={
+                !passwordValidated && passwordProvided ? "#000000" : "#EF2A39"
+              }
+            />
             <TextInput
               style={[
                 styles.input,
@@ -290,21 +317,19 @@ export const CreateAccount = ({ navigation }) => {
 
           <Pressable
             style={[
-              styles.createAccountButton,
+              styles.registerButton,
               validateAllInputs() ? null : styles.disabledButton,
             ]}
             onPress={createAccount}
             disabled={validateAllInputs() ? false : true}
           >
-            <Text style={styles.createAccountButtonText}>Create Account</Text>
+            <Text style={styles.registerButtonText}>Create Account</Text>
           </Pressable>
 
-          <View style={styles.redirectToSignIn}>
-            <Text style={styles.redirectToSignInText}>
-              Already have an account?
-            </Text>
+          <View style={styles.redirect}>
+            <Text style={styles.redirectText}>Already have an account?</Text>
             <Pressable onPress={() => navigation.navigate("SignIn")}>
-              <Text style={styles.redirectToSignInButton}>Sign In</Text>
+              <Text style={styles.redirectButton}>Sign In</Text>
             </Pressable>
           </View>
         </KeyboardAvoidingView>
@@ -312,122 +337,3 @@ export const CreateAccount = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "white",
-    width: "auto",
-  },
-
-  headerText: {
-    marginTop: 90
-  },
-
-  createAccount: {
-    color: "#000000",
-    fontWeight: "bold",
-    fontSize: 36,
-    fontWeight: "800",
-    marginBottom: 4,
-  },
-
-  createAccountInfo: {
-    color: "#A2A2A2",
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 20,
-  },
-
-  inputBox: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    width: "auto",
-    borderBottomColor: "#A2A2A2",
-    borderBottomWidth: 1,
-    paddingHorizontal: 10,
-    marginTop: 7,
-  },
-
-  input: {
-    marginVertical: 10,
-    padding: 10,
-    height: 40,
-    borderRadius: 4,
-    flex: 1,
-    backgroundColor: "white",
-    fontWeight: "700",
-    fontSize: 16,
-  },
-
-  focusedInput: {
-    transform: [{ scale: 1.05 }],
-  },
-
-  invalidInputText: {
-    color: "#EF2A39",
-    marginTop: 1,
-    fontWeight: "bold",
-  },
-
-  invalidInputTextBox: {
-    backgroundColor: "#EF2A39",
-  },
-
-  invalidInput: {
-    borderColor: "#7a151d",
-    borderWidth: 2,
-    backgroundColor: "#EF2A39",
-    borderRadius: 15,
-    opacity: 0.65,
-  },
-
-  createAccountButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "white",
-    borderColor: "#EF2A39",
-    borderWidth: 2,
-    borderRadius: 30,
-    paddingVertical: 18,
-    marginVertical: 60,
-    width: 160,
-    alignSelf: "flex-end",
-    backgroundColor: "#EF2A39",
-  },
-
-  createAccountButtonText: {
-    color: "white",
-    fontWeight: "700",
-    fontSize: 16,
-  },
-
-  disabledButton: {
-    backgroundColor: "gray",
-    borderColor: "gray",
-    opacity: 0.6,
-  },
-
-  redirectToSignIn: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  redirectToSignInText: {
-    color: "#000000",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-
-  redirectToSignInButton: {
-    color: "#EF2A39",
-    fontSize: 16,
-    fontWeight: "700",
-    paddingLeft: 4,
-  },
-});
