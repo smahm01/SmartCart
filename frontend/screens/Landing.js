@@ -8,7 +8,7 @@ export const Landing = ({ navigation }) => {
     <View style={styles.container}>
       <LandingPageWelcome style={styles.welcome} />
       <LandingPageButton
-        text="Sign In"
+        text="Login"
         onPress={() => navigation.navigate("SignIn")}
       />
       <LandingPageButton
