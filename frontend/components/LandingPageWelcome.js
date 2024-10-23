@@ -2,8 +2,6 @@ import React from "react";
 import { View, StyleSheet, Text } from "react-native";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
-
-
 export const LandingPageWelcome = ({ appName, appSlogan }) => {
   return (
     <View style={styles.backgroundWelcome}>

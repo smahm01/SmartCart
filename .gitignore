@@ -61,3 +61,5 @@ ehthumbs.db
 # Files that might appear in the root directory
 package-lock.json
 yarn.lock
+
+.expo/
