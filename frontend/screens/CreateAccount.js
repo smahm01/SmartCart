@@ -342,4 +342,3 @@ export const CreateAccount = ({ navigation }) => {
       )}
     </View>
   );
-};
