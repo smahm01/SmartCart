@@ -2,21 +2,23 @@ import { firestore } from '../config';
 import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
 
 class User {
-    constructor(name, email) {
+    constructor(name, email, phoneNumber, uid) {
         this.name = name;
         this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.uid = uid;
     }
 
-    static async fetchUsers() {
+    static async getUsers() {
         const usersCollection = collection(firestore, `users`);
         const snapshot = await getDocs(usersCollection);
-        return snapshot.docs.map(doc => new User(doc.id, doc.data().name, doc.data().email));
+        return snapshot.docs.map(doc => new User(doc.data().name, doc.data().email, doc.data.phoneNumber, doc.uid));
     }
 
-    static async fetchUser(userId) {
+    static async getUser(userId) {
         const userDoc = doc(firestore, `users/${userId}`);
         const snapshot = await getDocs(userDoc);
-        return new User(snapshot.id, snapshot.data().name, snapshot.data().email);
+        return new User(snapshot.data().name, snapshot.data().email, doc.data().phoneNumber, doc.uid);
     }
 
     static async addUser(user) {
@@ -24,6 +26,8 @@ class User {
         await addDoc(usersCollection, {
             name: user.name,
             email: user.email,
+            phoneNumber: user.phoneNumber,
+            uid: user.uid
         });
     }
 
@@ -32,6 +36,8 @@ class User {
         await updateDoc(userDoc, {
             name: user.name,
             email: user.email,
+            phoneNumber: user.phoneNumber,
+            uid: user.uid
         });
     }
 
