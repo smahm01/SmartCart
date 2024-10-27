@@ -19,6 +19,8 @@ import { doc, setDoc } from "firebase/firestore";
 import { BackButton } from "../components/BackButton";
 import { styles } from "../styles/CreateAccountSignInStyles";
 
+import { User } from "../firebase/models/Users";
+
 export const CreateAccount = ({ navigation }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -81,7 +83,7 @@ export const CreateAccount = ({ navigation }) => {
           setPasswordValidationText(
             "Password must be at least 8 characters long"
           );
-        }
+        };
       }
     } else if (input === "phoneNumber") {
       if (phoneNumber === "") {
@@ -135,13 +137,8 @@ export const CreateAccount = ({ navigation }) => {
 
       // Add user data to the database
       if (user) {
-        const userDocRef = doc(firestore, "users", user.uid);
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          name: name,
-          email: user.email,
-          phoneNumber: phoneNumber,
-        });
+        const newUser = new User(name, email, phoneNumber, user.uid);
+        await User.addUser(newUser);
       }
     } catch (error) {
       if (error.code === "auth/email-already-in-use") {
@@ -342,3 +339,4 @@ export const CreateAccount = ({ navigation }) => {
       )}
     </View>
   );
+}
