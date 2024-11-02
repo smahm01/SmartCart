@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   View,
   Text,
-  StyleSheet,
   KeyboardAvoidingView,
   Pressable,
 } from "react-native";
@@ -14,11 +13,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { firestore } from "../firebase/config";
-import { doc, setDoc } from "firebase/firestore";
 import { BackButton } from "../components/BackButton";
 import { styles } from "../styles/CreateAccountSignInStyles";
-
 import { User } from "../firebase/models/Users";
 
 export const CreateAccount = ({ navigation }) => {
