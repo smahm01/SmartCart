@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 
 export const SidebarUserInfo = ({ username, email }) => {
@@ -9,7 +9,7 @@ export const SidebarUserInfo = ({ username, email }) => {
         <FontAwesome
           name="user-circle"
           size={60}
-          style={{ paddingBottom: 10 }}
+          style={{ paddingBottom: 5 }}
           color="black"
         />
         <View style={styles.sidebarUserInfoTextContainer}>
@@ -17,9 +17,6 @@ export const SidebarUserInfo = ({ username, email }) => {
           <Text style={{ color: "#ffffff" }}>{email}</Text>
         </View>
       </View>
-      <Pressable>
-        <Text>Add Household</Text>
-      </Pressable>
     </View>
   );
 };
@@ -40,5 +37,14 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "bold",
     fontSize: 18,
+  },
+
+  createHouseholdButton: {
+    borderRadius: 10,
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 15,
+    paddingBottom: 10,
   },
 });

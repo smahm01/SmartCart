@@ -11,21 +11,29 @@ import {
 } from "firebase/firestore";
 
 class Household {
-  constructor(id, name, admins = [], people = []) {
-    this.id = id;
+  constructor(name, admins = [], people = []) {
     this.name = name;
     this.admins = admins;
     this.people = people;
   }
 
   // CREATE HOUSEHOLD METHODS
-  static async createHousehold(household) {
+
+  /*
+   * Creates a new household document in the firestore database
+   * @param household - Household object to be created
+   * @param userId - User id of the user creating the household (user reference will be added to the people & admin array)
+   * @return - The reference to the newly created household document
+   */
+  static async createHousehold(household, userId) {
     const householdCollection = collection(firestore, `household`);
-    await addDoc(householdCollection, {
+    const userCreatingHouseholdRef = doc(firestore, "users", userId);
+    const householdDocRef = await addDoc(householdCollection, {
       name: household.name,
-      admins: household.admins,
-      people: household.people,
+      admins: [userCreatingHouseholdRef],
+      people: [userCreatingHouseholdRef],
     });
+    return householdDocRef;
   }
 
   // GET HOUSEHOLD METHODS
@@ -41,8 +49,8 @@ class Household {
   }
 
   /*
-    * Returns all household documentsthat contain the user with userId in the people field array 
-    */
+   * Returns all household documentsthat contain the user with userId in the people field array
+   */
   static async getHouseholdsByUser(userId) {
     const householdsCollection = collection(firestore, "household");
     // Create user document reference so we can match on this in the people field in each household document

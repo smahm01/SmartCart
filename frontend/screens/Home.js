@@ -2,14 +2,25 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { auth } from "../firebase/config";
 import { Household } from "../firebase/models/Household";
+import { AddButton } from "../components/AddButton";
+import { CreateHouseholdBottomSheetForm } from "../components/CreateHouseholdBottomSheetForm";
 
 export const Home = () => {
   const [hasAssociatedHousehold, setHasAssociatedHousehold] = useState(false);
+  const [showCreateHouseholBottomSheet, setShowCreateHouseholdBottomSheet] =
+    useState(false);
   const currentUser = auth.currentUser;
+
+  const openCreateHouseholdBottomSheet = () => {
+    setShowCreateHouseholdBottomSheet(true);
+  };
+
+  const closeCreateHouseholdBottomSheet = () => {
+    setShowCreateHouseholdBottomSheet(false);
+  };
 
   const checkIfUserHasAssociatedHousehold = async () => {
     const userHouseholds = await Household.getHouseholdsByUser(currentUser.uid);
-    // If the querySnapshot is not empty, then the user is in a household
     if (!userHouseholds.empty) {
       setHasAssociatedHousehold(true);
     } else {
@@ -19,11 +30,11 @@ export const Home = () => {
 
   useEffect(() => {
     checkIfUserHasAssociatedHousehold();
-  }, []);
+  }, [showCreateHouseholBottomSheet]);
 
   function Greeting() {
     return (
-      <View style={styles.container}>
+      <View>
         <Text style={styles.text}>Welcome, {currentUser.email}</Text>
         {hasAssociatedHousehold ? (
           <Text>You are in a household</Text>
@@ -40,6 +51,19 @@ export const Home = () => {
   return (
     <View style={styles.container} initialRouteName="Home">
       <Greeting />
+      <View style={styles.addButtonContainer}>
+        <AddButton
+          style={styles.addHouseholdButton}
+          color="#EF2A39"
+          size="56"
+          onPress={openCreateHouseholdBottomSheet}
+        />
+      </View>
+      {showCreateHouseholBottomSheet ? (
+        <CreateHouseholdBottomSheetForm
+          onClose={closeCreateHouseholdBottomSheet}
+        />
+      ) : null}
     </View>
   );
 };
@@ -47,9 +71,14 @@ export const Home = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
+
+  addButtonContainer: {
+    position: "absolute",
+    bottom: 25,
+    right: 25,
+  },
+
   text: {
     color: "red",
     fontWeight: "bold",
