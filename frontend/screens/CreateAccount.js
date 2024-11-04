@@ -158,6 +158,7 @@ export const CreateAccount = ({ navigation }) => {
     <View style={styles.container}>
       {loading ? (
         <ActivityIndicator
+          testID="loading-indicator"
           style={styles.activityIndicator}
           size="large"
           color="#EF2A39"
