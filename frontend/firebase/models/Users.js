@@ -1,5 +1,5 @@
 import { firestore } from '../config';
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 
 class User {
     constructor(name, email, phoneNumber, uid) {
@@ -9,31 +9,52 @@ class User {
         this.uid = uid;
     }
 
-    static async getUsers() {
-        const usersCollection = collection(firestore, `users`);
-        const snapshot = await getDocs(usersCollection);
-        return snapshot.docs.map(doc => new User(doc.data().name, doc.data().email, doc.data.phoneNumber, doc.uid));
+    static async getUsers(db = getFirestore()) {
+        try {
+            const usersCollection = collection(db, `users`);
+            const snapshot = await getDocs(usersCollection);
+            const users = snapshot.docs.map(doc => new User(doc.data().name, doc.data().email, doc.data().phoneNumber, doc.id));
+            return {
+                success: true,
+                users: users
+            };
+        } catch (error) {
+            console.error('Error getting users:', error);
+            throw error;
+        }
     }
 
-    static async getUser(userId) {
-        const userDoc = doc(firestore, `users/${userId}`);
-        const snapshot = await getDocs(userDoc);
-        return new User(snapshot.data().name, snapshot.data().email, doc.data().phoneNumber, doc.uid);
+    static async getUser(userId, db = getFirestore()) {
+        try {
+            const userDoc = doc(db, `users/${userId}`);
+            const snapshot = await getDoc(userDoc);
+            if (snapshot.exists()) {
+                const user = new User(snapshot.data().name, snapshot.data().email, snapshot.data().phoneNumber, snapshot.id);
+                return {
+                    success: true,
+                    user: user
+                };
+            } else {
+                return {
+                    success: false,
+                    message: 'User not found'
+                };
+            }
+        } catch (error) {
+            console.error('Error getting user:', error);
+            throw error;
+        }
     }
 
     static async addUser(user, db = getFirestore()) {
         try {
-            // Create a document reference with the user's UID
             const userDocRef = doc(db, 'users', user.uid);
-            
-            // Set the document data
             await setDoc(userDocRef, {
                 name: user.name,
                 email: user.email,
                 phoneNumber: user.phoneNumber,
                 uid: user.uid
             });
-
             return {
                 success: true,
                 userId: user.uid
@@ -44,21 +65,38 @@ class User {
         }
     }
 
-    static async updateUser(userId, user) {
-        const userDoc = doc(firestore, `users/${userId}`);
-        await updateDoc(userDoc, {
-            name: user.name,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            uid: user.uid
-        });
+    static async updateUser(userId, user, db = getFirestore()) {
+        try {
+            const userDoc = doc(db, `users/${userId}`);
+            await setDoc(userDoc, {
+                name: user.name,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                uid: user.uid
+            }, { merge: true });
+            return {
+                success: true,
+                userId: userId
+            };
+        } catch (error) {
+            console.error('Error updating user:', error);
+            throw error;
+        }
     }
 
-    static async deleteUser(userId) {
-        const userDoc = doc(firestore, `users/${userId}`);
-        await deleteDoc(userDoc);
+    static async deleteUser(userId, db = getFirestore()) {
+        try {
+            const userDoc = doc(db, `users/${userId}`);
+            await deleteDoc(userDoc);
+            return {
+                success: true,
+                userId: userId
+            };
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            throw error;
+        }
     }
 }
-
 
 export { User };

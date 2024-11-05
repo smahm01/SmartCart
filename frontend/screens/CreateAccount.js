@@ -341,3 +341,5 @@ export const CreateAccount = ({ navigation }) => {
     </View>
   );
 }
+
+export default CreateAccount;
