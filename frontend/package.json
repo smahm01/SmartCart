@@ -56,5 +56,13 @@
     "jest-expo": "^51.0.4",
     "jest-react-native": "^18.0.0",
     "ts-jest": "^29.2.5"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": ["./jest.setup.js"],
+    "testTimeout": 10000,
+    "detectOpenHandles": true,
+    "forceExit": true
   }
+  
 }

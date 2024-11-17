@@ -13,11 +13,20 @@ beforeAll(async () => {
       port: 8080
     }
   });
+  // Initialize testDb here instead of in beforeEach
+  testDb = testEnv.authenticatedContext('testUser').firestore();
 });
 
 beforeEach(async () => {
+  // Make sure to await the clearance
   await testEnv.clearFirestore();
+  // Reset the testDb connection after clearing
   testDb = testEnv.authenticatedContext('testUser').firestore();
+});
+
+afterEach(async () => {
+  // Additional cleanup after each test
+  await testEnv.clearFirestore();
 });
 
 afterAll(async () => {
@@ -25,6 +34,7 @@ afterAll(async () => {
 });
 
 describe('Household Model', () => {
+
   test('createHousehold creates a new household document', async () => {
     const testHousehold = new Household(
       "Doe Family",
@@ -33,6 +43,7 @@ describe('Household Model', () => {
     );
 
     const docRef = await Household.createHousehold(testHousehold, testDb);
+
     const householdDocRef = doc(testDb, 'households', docRef.id);
     const householdDoc = await getDoc(householdDocRef);
 
@@ -59,6 +70,7 @@ describe('Household Model', () => {
       people: testHousehold2.people
     });
 
+
     const households = await Household.getHouseholds(testDb);
 
     expect(households.length).toBe(2);
@@ -72,6 +84,7 @@ describe('Household Model', () => {
       admins: testHousehold.admins,
       people: testHousehold.people
     });
+
 
     const household = await Household.getHousehold(docRef.id, testDb);
 
@@ -94,6 +107,7 @@ describe('Household Model', () => {
     const updatedHousehold = new Household("Smith Family", ["admin3"], ["person5", "person6"]);
     await Household.updateHousehold(docRef.id, updatedHousehold, testDb);
 
+
     const householdDocRef = doc(testDb, 'households', docRef.id);
     const householdDoc = await getDoc(householdDocRef);
 
@@ -115,6 +129,7 @@ describe('Household Model', () => {
     });
 
     await Household.deleteHousehold(docRef.id, testDb);
+
 
     const householdDocRef = doc(testDb, 'households', docRef.id);
     const householdDoc = await getDoc(householdDocRef);

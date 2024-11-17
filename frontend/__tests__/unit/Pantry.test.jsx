@@ -13,11 +13,20 @@ beforeAll(async () => {
       port: 8080
     }
   });
+  // Initialize testDb here instead of in beforeEach
+  testDb = testEnv.authenticatedContext('testUser').firestore();
 });
 
 beforeEach(async () => {
+  // Make sure to await the clearance
   await testEnv.clearFirestore();
+  // Reset the testDb connection after clearing
   testDb = testEnv.authenticatedContext('testUser').firestore();
+});
+
+afterEach(async () => {
+  // Additional cleanup after each test
+  await testEnv.clearFirestore();
 });
 
 afterAll(async () => {
