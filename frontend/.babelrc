@@ -1,4 +1,0 @@
-{
-    "presets": ["@babel/preset-env", "@babel/preset-react", "@babel/preset-modules", "@babel/preset-flow"],
-    "plugins": ["@babel/plugin-syntax-jsx", "@babel/plugin-syntax-flow"]
-  }

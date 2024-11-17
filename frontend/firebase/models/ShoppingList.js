@@ -1,5 +1,5 @@
 import { firestore } from '../config';
-import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, getFirestore } from "firebase/firestore";
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, getFirestore } from "firebase/firestore";
 
 class ShoppingList {
     constructor(householdId, category, name, id = null) {
@@ -12,7 +12,7 @@ class ShoppingList {
     static async getShoppingList(householdId, shoppingListId, db = getFirestore()) {
         try {
             const shoppingListDoc = doc(db, `households/${householdId}/shopping_list/${shoppingListId}`);
-            const snapshot = await getDocs(shoppingListDoc);
+            const snapshot = await getDoc(shoppingListDoc);
             if (snapshot.exists()) {
                 const shoppingList = new ShoppingList(householdId, snapshot.data().category, snapshot.data().name, snapshot.id);
                 return shoppingList;
@@ -29,7 +29,7 @@ class ShoppingList {
         try {
             const shoppingListsCollection = collection(db, `households/${householdId}/shopping_list`);
             const snapshot = await getDocs(shoppingListsCollection);
-            if (snapshot.exists()) {
+            if (!snapshot.empty) {
                 const shoppingLists = snapshot.docs.map(doc => new ShoppingList(householdId, doc.data().category, doc.data().name, doc.id));
                 return shoppingLists;
             } else {
@@ -44,13 +44,14 @@ class ShoppingList {
     static async createShoppingList(householdId, shoppingList, db = getFirestore()) {
         try {
             const shoppingListsCollectionRef = collection(db, `households/${householdId}/shopping_list`);
-            await addDoc(shoppingListsCollectionRef, {
+            const docRef = await addDoc(shoppingListsCollectionRef, {
                 householdId: householdId,
                 category: shoppingList.category,
                 name: shoppingList.name
             });
             return {
                 success: true,
+                id: docRef.id
             };
         } catch (error) {
             console.error('Error creating shopping list:', error);

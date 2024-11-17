@@ -1,5 +1,5 @@
 import { firestore } from '../config';
-import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, getFirestore } from "firebase/firestore";
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, getFirestore } from "firebase/firestore";
 
 class RequestedItem {
     constructor(householdId, shoppingListId, category, dateRequested, itemRequester, location, name, quantityRequested, requestFullfilled, id = null) {
@@ -18,7 +18,7 @@ class RequestedItem {
     static async getRequestedItem(householdId, shoppingListId, requestedItemId, db = getFirestore()) {
         try {
             const requestedItemDoc = doc(db, `households/${householdId}/shopping_list/${shoppingListId}/requested_items/${requestedItemId}`);
-            const snapshot = await getDocs(requestedItemDoc);
+            const snapshot = await getDoc(requestedItemDoc);
             if (snapshot.exists()) {
                 const requestedItem = new RequestedItem(
                     householdId,
@@ -46,7 +46,7 @@ class RequestedItem {
         try {
             const requestedItemsCollection = collection(db, `households/${householdId}/shopping_list/${shoppingListId}/requested_items`);
             const snapshot = await getDocs(requestedItemsCollection);
-            if (snapshot.exists()) {
+            if (!snapshot.empty) {
                 const requestedItems = snapshot.docs.map(doc => new RequestedItem(
                     householdId,
                     shoppingListId,
@@ -72,7 +72,7 @@ class RequestedItem {
     static async createRequestedItem(householdId, shoppingListId, requestedItem, db = getFirestore()) {
         try {
             const requestedItemsCollectionRef = collection(db, `households/${householdId}/shopping_list/${shoppingListId}/requested_items`);
-            await addDoc(requestedItemsCollectionRef, {
+            const docRef = await addDoc(requestedItemsCollectionRef, {
                 householdId: householdId,
                 shoppingListId: shoppingListId,
                 category: requestedItem.category,
@@ -85,6 +85,7 @@ class RequestedItem {
             });
             return {
                 success: true,
+                id: docRef.id
             };
         } catch (error) {
             console.error('Error creating requested item:', error);

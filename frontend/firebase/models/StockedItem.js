@@ -1,5 +1,5 @@
 import { firestore } from '../config';
-import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, getFirestore } from "firebase/firestore";
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, getFirestore } from "firebase/firestore";
 
 class StockedItem {
     constructor(householdId, pantryId, brand, category, expiryDate, location, name, quantity, id = null) {
@@ -17,7 +17,7 @@ class StockedItem {
     static async getStockedItem(householdId, pantryId, stockedItemId, db = getFirestore()) {
         try {
             const stockedItemDoc = doc(db, `households/${householdId}/pantry/${pantryId}/stocked_items/${stockedItemId}`);
-            const snapshot = await getDocs(stockedItemDoc);
+            const snapshot = await getDoc(stockedItemDoc);
             if (snapshot.exists()) {
                 const stockedItem = new StockedItem(
                     householdId,
@@ -44,7 +44,7 @@ class StockedItem {
         try {
             const stockedItemsCollection = collection(db, `households/${householdId}/pantry/${pantryId}/stocked_items`);
             const snapshot = await getDocs(stockedItemsCollection);
-            if (snapshot.exists()) {
+            if (!snapshot.empty) {
                 const stockedItems = snapshot.docs.map(doc => new StockedItem(
                     householdId,
                     pantryId,
@@ -69,7 +69,7 @@ class StockedItem {
     static async createStockedItem(householdId, pantryId, stockedItem, db = getFirestore()) {
         try {
             const stockedItemsCollectionRef = collection(db, `households/${householdId}/pantry/${pantryId}/stocked_items`);
-            await addDoc(stockedItemsCollectionRef, {
+            const docRef = await addDoc(stockedItemsCollectionRef, {
                 householdId: householdId,
                 pantryId: pantryId,
                 brand: stockedItem.brand,
@@ -81,6 +81,7 @@ class StockedItem {
             });
             return {
                 success: true,
+                id: docRef.id
             };
         } catch (error) {
             console.error('Error creating stocked item:', error);

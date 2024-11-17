@@ -1,5 +1,5 @@
 import { firestore } from '../config';
-import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, getFirestore } from "firebase/firestore";
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, getFirestore } from "firebase/firestore";
 
 class Pantry {
     constructor(householdId, category, name, id = null) {
@@ -12,7 +12,7 @@ class Pantry {
     static async getPantry(householdId, pantryId, db = getFirestore()) {
         try {
             const pantryDoc = doc(db, `households/${householdId}/pantry/${pantryId}`);
-            const snapshot = await getDocs(pantryDoc);
+            const snapshot = await getDoc(pantryDoc);
             if (snapshot.exists()) {
                 const pantry = new Pantry(householdId, snapshot.data().category, snapshot.data().name, snapshot.id);
                 return pantry;
@@ -29,7 +29,7 @@ class Pantry {
         try {
             const pantriesCollection = collection(db, `households/${householdId}/pantry`);
             const snapshot = await getDocs(pantriesCollection);
-            if (snapshot.exists()) {
+            if (!snapshot.empty) {
                 const pantries = snapshot.docs.map(doc => new Pantry(householdId, doc.data().category, doc.data().name, doc.id));
                 return pantries;
             } else {
@@ -44,13 +44,14 @@ class Pantry {
     static async createPantry(householdId, pantry, db = getFirestore()) {
         try {
             const pantriesCollectionRef = collection(db, `households/${householdId}/pantry`);
-            await addDoc(pantriesCollectionRef, {
+            const docRef = await addDoc(pantriesCollectionRef, {
                 householdId: householdId,
                 category: pantry.category,
                 name: pantry.name
             });
             return {
                 success: true,
+                id: docRef.id
             };
         } catch (error) {
             console.error('Error creating pantry:', error);

@@ -1,5 +1,5 @@
 import { firestore } from '../config';
-import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, getFirestore } from "firebase/firestore";
+import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, getFirestore, DocumentReference } from "firebase/firestore";
 
 class Household {
     constructor(name, admins = [], people = [], id = null) {
@@ -11,8 +11,8 @@ class Household {
 
     static async getHousehold(householdId, db = getFirestore()) {
         try {
-            const householdDoc = doc(firestore, `households/${householdId}`);
-            const snapshot = await getDocs(householdDoc);
+            const householdDoc = doc(db, `households/${householdId}`);
+            const snapshot = await getDoc(householdDoc);
             if (snapshot.exists()) {
                 const household = new Household(snapshot.data().name, snapshot.data().admins, snapshot.data().people, snapshot.id);
                 return household;
@@ -27,9 +27,9 @@ class Household {
 
     static async getHouseholds(db = getFirestore()) {
         try {
-            const householdsCollection = collection(db, `households`);
+            const householdsCollection = collection(db, 'households');
             const snapshot = await getDocs(householdsCollection);
-            if (snapshot.exists()) {
+            if (!snapshot.empty) {
                 const households = snapshot.docs.map(doc => new Household(doc.data().name, doc.data().admins, doc.data().people, doc.id));
                 return households;
             } else {
@@ -45,13 +45,14 @@ class Household {
     static async createHousehold(household, db = getFirestore()) {
         try {
             const householdsCollectionRef = collection(db, 'households');
-            await addDoc(householdsCollectionRef, {
+            const docRef = await addDoc(householdsCollectionRef, {
                 name: household.name,
                 admins: household.admins,
                 people: household.people
             });
             return {
                 success: true,
+                id: docRef.id
             };
         } catch (error) {
             console.error('Error creating household:', error);
