@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   createHouseholdButton: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "white",
+    // backgroundColor: "white",
     borderColor: "#EF2A39",
     borderWidth: 2,
     borderRadius: 30,

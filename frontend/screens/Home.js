@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import {View, Text, StyleSheet, Pressable} from "react-native";
 import { auth } from "../firebase/config";
 import { Household } from "../firebase/models/Household";
 import { AddButton } from "../components/AddButton";
 import { CreateHouseholdBottomSheetForm } from "../components/CreateHouseholdBottomSheetForm";
+import {collection, doc, getDocs, getFirestore} from "firebase/firestore";
+import HouseholdCard from "../components/HouseholdCard";
 
 export const Home = () => {
   const [hasAssociatedHousehold, setHasAssociatedHousehold] = useState(false);
@@ -48,9 +50,49 @@ export const Home = () => {
     );
   }
 
+  const db = getFirestore();
+
+  function AllHouseholds(){
+    const [data, setData] = useState([]);
+    const [status, setStatus] = useState("");
+
+    async function getAllHouseholdsFromFirestore() {
+      try{
+        const queryResult = await getDocs(collection(db, "houses"));
+        const households = [];
+        queryResult.forEach((doc) => {
+          households.push({id: doc.id, ...doc.data()});
+        });
+        setData(households);
+        setStatus("Success");
+      } catch (error){
+        console.error("Error fetching households", error);
+        setStatus("Error");
+      }
+    }
+    useEffect(() => {
+      getAllHouseholdsFromFirestore();
+    }, []);
+
+    const renderHouseholds = data.map((house, index) => (
+        <View key={index} style={styles.houseHolds}>
+          <HouseholdCard documentId={house.id}/>
+        </View>
+        )
+    );
+
+    return (
+      <ScrollView>
+        {renderHouseholds}
+      </ScrollView>
+    );
+  }
+
+
   return (
     <View style={styles.container} initialRouteName="Home">
       <Greeting />
+      <AllHouseholds/>
       <View style={styles.addButtonContainer}>
         <AddButton
           style={styles.addHouseholdButton}
@@ -70,6 +112,10 @@ export const Home = () => {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+
+  houseHolds: {
     flex: 1,
   },
 
