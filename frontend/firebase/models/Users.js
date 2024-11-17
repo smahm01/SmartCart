@@ -9,36 +9,15 @@ class User {
         this.uid = uid;
     }
 
-    static async getUsers(db = getFirestore()) {
-        try {
-            const usersCollection = collection(db, `users`);
-            const snapshot = await getDocs(usersCollection);
-            const users = snapshot.docs.map(doc => new User(doc.data().name, doc.data().email, doc.data().phoneNumber, doc.id));
-            return {
-                success: true,
-                users: users
-            };
-        } catch (error) {
-            console.error('Error getting users:', error);
-            throw error;
-        }
-    }
-
     static async getUser(userId, db = getFirestore()) {
         try {
             const userDoc = doc(db, `users/${userId}`);
             const snapshot = await getDoc(userDoc);
             if (snapshot.exists()) {
                 const user = new User(snapshot.data().name, snapshot.data().email, snapshot.data().phoneNumber, snapshot.id);
-                return {
-                    success: true,
-                    user: user
-                };
+                return user;
             } else {
-                return {
-                    success: false,
-                    message: 'User not found'
-                };
+                throw new Error('User not found');
             }
         } catch (error) {
             console.error('Error getting user:', error);
@@ -46,7 +25,23 @@ class User {
         }
     }
 
-    static async addUser(user, db = getFirestore()) {
+    static async getUsers(db = getFirestore()) {
+        try {
+            const usersCollection = collection(db, `users`);
+            const snapshot = await getDocs(usersCollection);
+            if (!snapshot.empty) {
+                const users = snapshot.docs.map(doc => new User(doc.data().name, doc.data().email, doc.data().phoneNumber, doc.id));
+                return users;
+            } else {
+                throw new Error('No users found');
+            }
+        } catch (error) {
+            console.error('Error getting users:', error);
+            throw error;
+        }
+    }
+
+    static async createUser(user, db = getFirestore()) {
         try {
             const userDocRef = doc(db, 'users', user.uid);
             await setDoc(userDocRef, {
@@ -60,20 +55,19 @@ class User {
                 userId: user.uid
             };
         } catch (error) {
-            console.error('Error adding user:', error);
+            console.error('Error creating user:', error);
             throw error;
         }
     }
 
-    static async updateUser(userId, user, db = getFirestore()) {
+    static async updateUser(userId, updatedUser, db = getFirestore()) {
         try {
             const userDoc = doc(db, `users/${userId}`);
-            await setDoc(userDoc, {
-                name: user.name,
-                email: user.email,
-                phoneNumber: user.phoneNumber,
-                uid: user.uid
-            }, { merge: true });
+            await updateDoc(userDoc, {
+                name: updatedUser.name,
+                email: updatedUser.email,
+                phoneNumber: updatedUser.phoneNumber
+            });
             return {
                 success: true,
                 userId: userId
