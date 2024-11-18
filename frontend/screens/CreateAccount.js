@@ -79,7 +79,7 @@ export const CreateAccount = ({ navigation }) => {
           setPasswordValidationText(
             "Password must be at least 8 characters long"
           );
-        };
+        }
       }
     } else if (input === "phoneNumber") {
       if (phoneNumber === "") {
@@ -134,7 +134,7 @@ export const CreateAccount = ({ navigation }) => {
       // Add user data to the database
       if (user) {
         const newUser = new User(name, email, phoneNumber, user.uid);
-        await User.addUser(newUser);
+        await User.createUser(newUser);
       }
     } catch (error) {
       if (error.code === "auth/email-already-in-use") {
@@ -335,4 +335,4 @@ export const CreateAccount = ({ navigation }) => {
       )}
     </View>
   );
-}
+};

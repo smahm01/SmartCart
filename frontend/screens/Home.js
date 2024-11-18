@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, FlatList } from "react-native";
 import { auth } from "../firebase/config";
-import { Household } from "../firebase/models/Household";
 import { AddButton } from "../components/AddButton";
 import { CreateHouseholdBottomSheetForm } from "../components/CreateHouseholdBottomSheetForm";
 import HouseholdCard from "../components/HouseholdCard";
+import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
+import { firestore } from "../firebase/config";
 
 export const Home = () => {
   const [hasAssociatedHousehold, setHasAssociatedHousehold] = useState(false);
@@ -21,20 +22,31 @@ export const Home = () => {
     setShowCreateHouseholdBottomSheet(false);
   };
 
-  const checkIfUserHasAssociatedHousehold = async () => {
-    const userHouseholds = await Household.getHouseholdsByUser(currentUser.uid);
-    if (userHouseholds.length > 0) {
-      setHasAssociatedHousehold(true);
-      setUserHouseholds(userHouseholds);
-    } else {
-      setHasAssociatedHousehold(false);
-      setUserHouseholds([]);
-    }
-  };
-
   useEffect(() => {
-    checkIfUserHasAssociatedHousehold();
-  }, [showCreateHouseholBottomSheet]);
+    if (!currentUser) {
+      setUserHouseholds([]);
+      setHasAssociatedHousehold(false);
+      return;
+    }
+
+    const householdsCollection = collection(firestore, "household");
+    const userDocRef = doc(firestore, "users", currentUser.uid);
+    const q = query(
+      householdsCollection,
+      where("people", "array-contains", userDocRef)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const households = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setUserHouseholds(households);
+      setHasAssociatedHousehold(households.length > 0);
+    });
+
+    return () => unsubscribe();
+  }, [currentUser]);
 
   return (
     <View style={styles.container}>

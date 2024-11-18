@@ -4,7 +4,7 @@ import {
   doc,
   getDocs,
   getDoc,
-  addDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
 } from "firebase/firestore";
@@ -32,27 +32,30 @@ class User {
   }
 
   static async getUser(userId) {
-    const userDoc = doc(firestore, "users", userId);
-    const snapshot = await getDoc(userDoc);
-    if (snapshot.exists) {
-      return new User(
-        snapshot.data().name,
-        snapshot.data().email,
-        snapshot.data().phoneNumber,
-        userId
-      );
-    } else {
-      return null;
+    try {
+      const userDoc = doc(firestore, "users", userId);
+      const snapshot = await getDoc(userDoc);
+      if (snapshot.exists) {
+        return new User(
+          snapshot.data().name,
+          snapshot.data().email,
+          snapshot.data().phoneNumber,
+          userId
+        );
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error("Error getting user:", error);
     }
   }
 
-  static async addUser(user) {
-    const usersCollection = collection(firestore, `users`);
-    await addDoc(usersCollection, {
+  static async createUser(user) {
+    const newUserDocRef = doc(firestore, `users`, user.uid);
+    await setDoc(newUserDocRef, {
       name: user.name,
       email: user.email,
       phoneNumber: user.phoneNumber,
-      uid: user.uid,
     });
   }
 
