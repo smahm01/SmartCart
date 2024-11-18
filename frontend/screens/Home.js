@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
-import {View, Text, StyleSheet, Pressable} from "react-native";
+import { View, Text, StyleSheet, FlatList } from "react-native";
 import { auth } from "../firebase/config";
 import { Household } from "../firebase/models/Household";
 import { AddButton } from "../components/AddButton";
 import { CreateHouseholdBottomSheetForm } from "../components/CreateHouseholdBottomSheetForm";
-import {collection, doc, getDocs, getFirestore} from "firebase/firestore";
 import HouseholdCard from "../components/HouseholdCard";
 
 export const Home = () => {
   const [hasAssociatedHousehold, setHasAssociatedHousehold] = useState(false);
   const [showCreateHouseholBottomSheet, setShowCreateHouseholdBottomSheet] =
     useState(false);
+  const [userHouseholds, setUserHouseholds] = useState([]);
   const currentUser = auth.currentUser;
 
   const openCreateHouseholdBottomSheet = () => {
@@ -23,10 +23,12 @@ export const Home = () => {
 
   const checkIfUserHasAssociatedHousehold = async () => {
     const userHouseholds = await Household.getHouseholdsByUser(currentUser.uid);
-    if (!userHouseholds.empty) {
+    if (userHouseholds.length > 0) {
       setHasAssociatedHousehold(true);
+      setUserHouseholds(userHouseholds);
     } else {
       setHasAssociatedHousehold(false);
+      setUserHouseholds([]);
     }
   };
 
@@ -34,65 +36,48 @@ export const Home = () => {
     checkIfUserHasAssociatedHousehold();
   }, [showCreateHouseholBottomSheet]);
 
-  function Greeting() {
-    return (
-      <View>
-        <Text style={styles.text}>Welcome, {currentUser.email}</Text>
-        {hasAssociatedHousehold ? (
-          <Text>You are in a household</Text>
-        ) : (
-          <Text>
-            You are not in a household. Please create a new household or join an
-            existing one!
+  return (
+    <View style={styles.container}>
+      {/* Upper Container with households user belongs to*/}
+      <View style={styles.upperHouseholdInfoContainer}>
+        <Text style={styles.upperLowerContainerTitle}>Households</Text>
+
+        {!hasAssociatedHousehold ? (
+          <Text style={styles.userHasNoHouseholdsMessage}>
+            No households found. Please join a household or create a new one to
+            get started.
           </Text>
+        ) : (
+          <FlatList
+            data={userHouseholds}
+            renderItem={({ item }) => (
+              <HouseholdCard
+                name={item.name}
+                numberOfMembers={item.people.length}
+              />
+            )}
+            keyExtractor={(item) => item.id}
+            horizontal={true}
+            style={styles.householdsList}
+          />
         )}
       </View>
-    );
-  }
 
-  const db = getFirestore();
+      {/* Lower Container with lists user has starred (from various households) */}
+      <View style={styles.lowerListInfoContainer}>
+        <Text style={styles.upperLowerContainerTitle}>Starred Lists</Text>
+      </View>
 
-  function AllHouseholds(){
-    const [data, setData] = useState([]);
-    const [status, setStatus] = useState("");
-
-    async function getAllHouseholdsFromFirestore() {
-      try{
-        const queryResult = await getDocs(collection(db, "houses"));
-        const households = [];
-        queryResult.forEach((doc) => {
-          households.push({id: doc.id, ...doc.data()});
-        });
-        setData(households);
-        setStatus("Success");
-      } catch (error){
-        console.error("Error fetching households", error);
-        setStatus("Error");
-      }
-    }
-    useEffect(() => {
-      getAllHouseholdsFromFirestore();
-    }, []);
-
-    const renderHouseholds = data.map((house, index) => (
-        <View key={index} style={styles.houseHolds}>
-          <HouseholdCard documentId={house.id}/>
+      {/* Bottom Sheet to create new household */}
+      {showCreateHouseholBottomSheet && (
+        <View style={styles.bottomSheetOverlay}>
+          <CreateHouseholdBottomSheetForm
+            onClose={closeCreateHouseholdBottomSheet}
+          />
         </View>
-        )
-    );
+      )}
 
-    return (
-      <ScrollView>
-        {renderHouseholds}
-      </ScrollView>
-    );
-  }
-
-
-  return (
-    <View style={styles.container} initialRouteName="Home">
-      <Greeting />
-      <AllHouseholds/>
+      {/* Floating Add Button to create new household*/}
       <View style={styles.addButtonContainer}>
         <AddButton
           style={styles.addHouseholdButton}
@@ -101,11 +86,6 @@ export const Home = () => {
           onPress={openCreateHouseholdBottomSheet}
         />
       </View>
-      {showCreateHouseholBottomSheet ? (
-        <CreateHouseholdBottomSheetForm
-          onClose={closeCreateHouseholdBottomSheet}
-        />
-      ) : null}
     </View>
   );
 };
@@ -115,8 +95,40 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  houseHolds: {
+  upperHouseholdInfoContainer: {
+    flex: 2.25,
+    flexDirection: "column",
+    backgroundColor: "#FAFAFA",
+  },
+
+  upperLowerContainerTitle: {
+    fontSize: 28,
+    marginTop: 5,
+    marginLeft: 10,
+    fontWeight: "800",
+    color: "#969696",
+  },
+
+  userHasNoHouseholdsMessage: {
+    fontSize: 15,
+    marginTop: 50,
+    marginHorizontal: 30,
+    fontWeight: "600",
+    color: "#EF2A39",
+    textAlign: "center",
+    display: "flex",
+    justifyContent: "center",
+  },
+
+  householdsList: {
     flex: 1,
+    width: "100%",
+  },
+
+  lowerListInfoContainer: {
+    flex: 7.75,
+    flexDirection: "column",
+    backgroundColor: "#FAFAFA",
   },
 
   addButtonContainer: {
@@ -125,9 +137,9 @@ const styles = StyleSheet.create({
     right: 25,
   },
 
-  text: {
-    color: "red",
-    fontWeight: "bold",
-    fontSize: 24,
+  bottomSheetOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
 });

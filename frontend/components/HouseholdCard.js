@@ -1,60 +1,74 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import React from "react";
+import { View, Text, StyleSheet, Pressable } from "react-native";
+import Entypo from "@expo/vector-icons/Entypo";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useNavigation } from "@react-navigation/native";
 
-const HouseholdCard = ({documentId}) => {
-  const [houseName, setHouseName] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchHouseName = async () => {
-      try {
-        const db = getFirestore();
-        const docRef = doc(db, 'houses', documentId); // Replace 'houses' and 'houseId' with your Firestore data
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          setHouseName(docSnap.data().name); // Assuming "name" is the field in the document
-        } else {
-          console.log("No such document!");
-        }
-      } catch (error) {
-        console.error("Error fetching house name: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHouseName();
-  }, []);
-
-  if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
-  }
+const HouseholdCard = ({ name, numberOfMembers}) => {
+  const navigation = useNavigation();
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.houseName}>{houseName || "House Name Unavailable"}</Text>
-    </View>
-  );
+        <Pressable style={styles.cardContainer} onPress={() => navigation.navigate("SelectedHousehold")}>
+          <View>
+            <View style={styles.householdNameContainer}>
+              <Entypo name="home" size={32} color="#ffffff" />
+              <Text style={styles.householdName}>{name}</Text>
+            </View>
+            <View style={styles.householdInformation}>
+              <FontAwesome name="users" size={16} color="#ffffff" />
+              <Text style={styles.numberOfMembers}>
+                Members: {numberOfMembers}
+              </Text>
+            </View>
+          </View>
+        </Pressable>
+      )
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    padding: 16,
-    margin: 16,
-    borderRadius: 8,
-    elevation: 3, // Android shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4, // iOS shadow
+  container: {
+    flex: 1,
   },
-  houseName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+
+  cardContainer: {
+    backgroundColor: "#EF2A39",
+    marginVertical: 20,
+    marginHorizontal: 10,
+    borderRadius: 12,
+    shadowColor: "#868686",
+    shadowOffset: { width: -3, height: 8 },
+    shadowOpacity: 0.9,
+    shadowRadius: 4,
+    width: 250,
+  },
+
+  householdNameContainer: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    margin: 5,
+  },
+
+  householdName: {
+    fontSize: 24,
+    fontWeight: "700",
+    padding: 5,
+    color: "#ffffff",
+  },
+
+  householdInformation: {
+    display: "flex",
+    flexDirection: "row",
+    textAlign: "flex-start",
+    marginHorizontal: 10,
+  },
+
+  numberOfMembers: {
+    fontSize: 14,
+    color: "#ffffff",
+    fontWeight: "700",
+    marginLeft: 8,
   },
 });
 

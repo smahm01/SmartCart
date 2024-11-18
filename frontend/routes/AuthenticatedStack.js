@@ -1,10 +1,11 @@
-import React from "react-native";
+import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import { Home } from "../screens/Home";
 import { Invitations } from "../screens/Invitations";
 import { Profile } from "../screens/Profile";
 import { CustomDrawer } from "../components/CustomDrawer";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { SelectedHousehold } from "./SelectedHousehold";
 
 const Drawer = createDrawerNavigator();
 
@@ -45,6 +46,15 @@ export const AuthenticatedStack = () => {
           drawerIcon: (color) => (
             <AntDesign name="profile" size={24} color={color} />
           ),
+        }}
+      />
+      <Drawer.Screen
+        name="SelectedHousehold"
+        component={SelectedHousehold}
+        options={{
+          drawerLabel: () => null,
+          drawerItemStyle: { display: "none" }, 
+          headerTitle: "", 
         }}
       />
     </Drawer.Navigator>

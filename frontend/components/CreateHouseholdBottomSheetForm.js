@@ -8,11 +8,26 @@ import { auth } from "../firebase/config";
 export const CreateHouseholdBottomSheetForm = ({ onClose }) => {
   const snapPoints = useMemo(() => ["20%", "80%"], []);
   const [householdName, setHouseholdName] = useState("");
+  const [isHouseholdNameValid, setIsHouseholdNameValid] = useState(false);
+  const [householdNameProvided, setHouseholdNameProvided] = useState(false);
   const curentUser = auth.currentUser;
+
+  const validateHouseholdName = () => {
+    if (householdName.length === 0) {
+      setHouseholdNameProvided(false);
+    } else {
+      setHouseholdNameProvided(true);
+      if (householdName.length < 5) {
+        setIsHouseholdNameValid(false);
+      } else {
+        setIsHouseholdNameValid(true);
+      }
+    }
+  };
 
   const createNewHousehold = async () => {
     try {
-      const householdToCreate = new Household(householdName, [], []);
+      const householdToCreate = new Household("", householdName, [], []);
       const householdDocRef = await Household.createHousehold(
         householdToCreate,
         curentUser.uid
@@ -32,7 +47,7 @@ export const CreateHouseholdBottomSheetForm = ({ onClose }) => {
       <BottomSheet
         index={1}
         snapPoints={snapPoints}
-        enablePanDownToClose={true}
+        enablePanDownToClose={false}
       >
         <BottomSheetView>
           <View style={styles.createHouseholdTitleContainer}>
@@ -43,13 +58,23 @@ export const CreateHouseholdBottomSheetForm = ({ onClose }) => {
           </View>
 
           <View style={styles.househouldInputContainer}>
-            <TextInput
-              style={styles.input}
-              name="householdName"
-              value={householdName}
-              placeholder="Household Name"
-              onChangeText={(householdName) => setHouseholdName(householdName)}
-            ></TextInput>
+            <View style={styles.inputAndErrorMessageContainer}>
+              <TextInput
+                style={styles.input}
+                name="householdName"
+                value={householdName}
+                placeholder="Household Name"
+                onChangeText={(householdName) =>
+                  setHouseholdName(householdName)
+                }
+                onBlur={(householdName) => validateHouseholdName(householdName)}
+              ></TextInput>
+              {householdNameProvided && !isHouseholdNameValid ? (
+                <Text style={styles.invalidInput}>
+                  Name must contain leat 5 characters.
+                </Text>
+              ) : null}
+            </View>
 
             <Pressable style={styles.createHouseholdButton}>
               <Text
@@ -80,16 +105,15 @@ const styles = StyleSheet.create({
   createHouseholdTitle: {
     fontSize: 24,
     fontWeight: "700",
-    marginHorizontal: 5,
+    marginHorizontal: 10,
   },
 
   househouldInputContainer: {
     display: "flex",
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    padding: 0,
-    margin: 20,
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    margin: 10,
   },
 
   input: {
@@ -104,10 +128,15 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
   },
 
+  invalidInput: {
+    color: "#EF2A39",
+    fontWeight: "500",
+    marginTop: 1,
+  },
+
   createHouseholdButton: {
     alignItems: "center",
     justifyContent: "center",
-    // backgroundColor: "white",
     borderColor: "#EF2A39",
     borderWidth: 2,
     borderRadius: 30,

@@ -11,7 +11,8 @@ import {
 } from "firebase/firestore";
 
 class Household {
-  constructor(name, admins = [], people = []) {
+  constructor(id = "", name = "", admins = [], people = []) {
+    this.id = id;
     this.name = name;
     this.admins = admins;
     this.people = people;
@@ -64,7 +65,21 @@ class Household {
 
     // Execute query
     const snapshot = await getDocs(q);
-    return snapshot;
+
+    if (snapshot.empty) {
+      return [];
+    } else {
+      const households = snapshot.docs.map(
+        (doc) =>
+          new Household(
+            doc.id,
+            doc.data().name,
+            doc.data().admins,
+            doc.data().people
+          )
+      );
+      return households;
+    }
   }
 
   static async getHouseholds() {
