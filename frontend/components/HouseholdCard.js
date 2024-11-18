@@ -17,7 +17,7 @@ const HouseholdCard = ({ name, numberOfMembers}) => {
             <View style={styles.householdInformation}>
               <FontAwesome name="users" size={16} color="#ffffff" />
               <Text style={styles.numberOfMembers}>
-                Members: {numberOfMembers}
+                {numberOfMembers}
               </Text>
             </View>
           </View>
