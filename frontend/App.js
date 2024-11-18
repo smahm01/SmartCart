@@ -1,16 +1,13 @@
 import "./gesture-handler";
 import React, { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
-import { addDocument, getDocuments } from "./firebase/firebaseFunctions";
 import { NavigationContainer } from "@react-navigation/native";
 import { AuthenticationLoadingStack } from "./routes/AuthenticationLoadingStack";
-import { Home } from "./screens/Home";
+import { AuthenticatedStack } from "./routes/AuthenticatedStack";
 import { auth } from "./firebase/config";
 import { onAuthStateChanged } from "firebase/auth";
 
-
 export default function App() {
-
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -27,7 +24,7 @@ export default function App() {
 
   return (
     <NavigationContainer style={styles.container}>
-      {user ? <Home /> : <AuthenticationLoadingStack />}
+      {user ? <AuthenticatedStack /> : <AuthenticationLoadingStack />}
     </NavigationContainer>
   );
 }
