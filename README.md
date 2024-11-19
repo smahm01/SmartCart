@@ -24,4 +24,4 @@ i.e. a User can be created as follows:
     const  docRef  =  await  User.createUser(newUser);
 
 
- `docRef` will now have the id paramater (`docRef.id`) containing the id of the created User.
+ `docRef` will now have the `id` paramater (`docRef.id`) containing the collection ID of the created User.
