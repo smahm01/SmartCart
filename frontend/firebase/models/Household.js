@@ -40,7 +40,7 @@ class Household {
             throw error;
         }
     }
-    
+
 
     static async createHousehold(household, db = getFirestore()) {
         try {
@@ -76,7 +76,7 @@ class Household {
             console.error('Error updating household:', error);
             throw error;
         }
-        
+
     }
 
     static async deleteHousehold(householdId, db = getFirestore()) {
@@ -92,6 +92,51 @@ class Household {
             throw error;
         }
     }
+
+    static async createHousehold(household, userId) {
+        const householdCollection = collection(firestore, `household`);
+        const userCreatingHouseholdRef = doc(firestore, "users", userId);
+        const householdDocRef = await addDoc(householdCollection, {
+            name: household.name,
+            admins: [userCreatingHouseholdRef],
+            people: [userCreatingHouseholdRef],
+        });
+        return householdDocRef;
+    }
+
+    /*
+  * Returns all household documentsthat contain the user with userId in the people field array
+  */
+    static async getHouseholdsByUser(userId) {
+        const householdsCollection = collection(firestore, "household");
+        // Create user document reference so we can match on this in the people field in each household document
+        const userDocRef = doc(firestore, "users", userId);
+
+        // Construct query to check if the user is in the people array of any household document
+        const q = query(
+            householdsCollection,
+            where("people", "array-contains", userDocRef)
+        );
+
+        // Execute query
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+            return [];
+        } else {
+            const households = snapshot.docs.map(
+                (doc) =>
+                    new Household(
+                        doc.id,
+                        doc.data().name,
+                        doc.data().admins,
+                        doc.data().people
+                    )
+            );
+            return households;
+        }
+    }
+
 
 }
 
