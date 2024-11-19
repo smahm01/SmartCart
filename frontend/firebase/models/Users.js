@@ -1,13 +1,5 @@
-import { firestore } from "../config";
-import {
-  collection,
-  doc,
-  getDocs,
-  getDoc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-} from "firebase/firestore";
+import { firestore } from '../config';
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 
 class User {
   constructor(name, email, phoneNumber, uid) {
@@ -17,62 +9,88 @@ class User {
     this.uid = uid;
   }
 
-  static async getUsers() {
-    const usersCollection = collection(firestore, `users`);
-    const snapshot = await getDocs(usersCollection);
-    return snapshot.docs.map(
-      (doc) =>
-        new User(
-          doc.data().name,
-          doc.data().email,
-          doc.data.phoneNumber,
-          doc.uid
-        )
-    );
-  }
-
-  static async getUser(userId) {
-    try {
-      const userDoc = doc(firestore, "users", userId);
-      const snapshot = await getDoc(userDoc);
-      if (snapshot.exists) {
-        return new User(
-          snapshot.data().name,
-          snapshot.data().email,
-          snapshot.data().phoneNumber,
-          userId
-        );
-      } else {
-        return null;
-      }
-    } catch (error) {
-      console.error("Error getting user:", error);
+    static async getUser(userId, db = getFirestore()) {
+        try {
+            const userDoc = doc(db, `users/${userId}`);
+            const snapshot = await getDoc(userDoc);
+            if (snapshot.exists()) {
+                const user = new User(snapshot.data().name, snapshot.data().email, snapshot.data().phoneNumber, snapshot.id);
+                return user;
+            } else {
+                throw new Error('User not found');
+            }
+        } catch (error) {
+            console.error('Error getting user:', error);
+            throw error;
+        }
     }
-  }
 
-  static async createUser(user) {
-    const newUserDocRef = doc(firestore, `users`, user.uid);
-    await setDoc(newUserDocRef, {
-      name: user.name,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-    });
-  }
+    static async getUsers(db = getFirestore()) {
+        try {
+            const usersCollection = collection(db, `users`);
+            const snapshot = await getDocs(usersCollection);
+            if (!snapshot.empty) {
+                const users = snapshot.docs.map(doc => new User(doc.data().name, doc.data().email, doc.data().phoneNumber, doc.id));
+                return users;
+            } else {
+                throw new Error('No users found');
+            }
+        } catch (error) {
+            console.error('Error getting users:', error);
+            throw error;
+        }
+    }
 
-  static async updateUser(userId, user) {
-    const userDoc = doc(firestore, `users/${userId}`);
-    await updateDoc(userDoc, {
-      name: user.name,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      uid: user.uid,
-    });
-  }
+    static async createUser(user, db = getFirestore()) {
+        try {
+            const userDocRef = doc(db, 'users', user.uid);
+            await setDoc(userDocRef, {
+                name: user.name,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                uid: user.uid
+            });
+            return {
+                success: true,
+                userId: user.uid
+            };
+        } catch (error) {
+            console.error('Error creating user:', error);
+            throw error;
+        }
+    }
 
-  static async deleteUser(userId) {
-    const userDoc = doc(firestore, `users/${userId}`);
-    await deleteDoc(userDoc);
-  }
+    static async updateUser(userId, updatedUser, db = getFirestore()) {
+        try {
+            const userDoc = doc(db, `users/${userId}`);
+            await updateDoc(userDoc, {
+                name: updatedUser.name,
+                email: updatedUser.email,
+                phoneNumber: updatedUser.phoneNumber
+            });
+            return {
+                success: true,
+                userId: userId
+            };
+        } catch (error) {
+            console.error('Error updating user:', error);
+            throw error;
+        }
+    }
+
+    static async deleteUser(userId, db = getFirestore()) {
+        try {
+            const userDoc = doc(db, `users/${userId}`);
+            await deleteDoc(userDoc);
+            return {
+                success: true,
+                userId: userId
+            };
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            throw error;
+        }
+    }
 }
 
 export { User };

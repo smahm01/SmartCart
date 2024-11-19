@@ -29,8 +29,7 @@ export const CreateHouseholdBottomSheetForm = ({ onClose }) => {
     try {
       const householdToCreate = new Household("", householdName, [], []);
       const householdDocRef = await Household.createHousehold(
-        householdToCreate,
-        curentUser.uid
+        householdToCreate
       );
       console.log("Household created with ID: ", householdDocRef.id);
       return householdDocRef;

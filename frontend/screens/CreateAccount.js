@@ -134,7 +134,7 @@ export const CreateAccount = ({ navigation }) => {
       // Add user data to the database
       if (user) {
         const newUser = new User(name, email, phoneNumber, user.uid);
-        await User.createUser(newUser);
+        const docRef = await User.createUser(newUser);
       }
     } catch (error) {
       if (error.code === "auth/email-already-in-use") {
@@ -154,6 +154,7 @@ export const CreateAccount = ({ navigation }) => {
     <View style={styles.container}>
       {loading ? (
         <ActivityIndicator
+          testID="loading-indicator"
           style={styles.activityIndicator}
           size="large"
           color="#EF2A39"
@@ -335,4 +336,6 @@ export const CreateAccount = ({ navigation }) => {
       )}
     </View>
   );
-};
+}
+
+export default CreateAccount;
