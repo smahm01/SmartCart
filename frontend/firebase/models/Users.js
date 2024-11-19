@@ -2,12 +2,12 @@ import { firestore } from '../config';
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 
 class User {
-    constructor(name, email, phoneNumber, uid) {
-        this.name = name;
-        this.email = email;
-        this.phoneNumber = phoneNumber;
-        this.uid = uid;
-    }
+  constructor(name, email, phoneNumber, uid) {
+    this.name = name;
+    this.email = email;
+    this.phoneNumber = phoneNumber;
+    this.uid = uid;
+  }
 
     static async getUser(userId, db = getFirestore()) {
         try {

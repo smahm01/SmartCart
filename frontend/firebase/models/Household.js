@@ -79,6 +79,19 @@ class Household {
 
     }
 
+  static async getHouseholds() {
+    const householdsCollection = collection(firestore, `household`);
+    const snapshot = await getDocs(householdsCollection);
+    return snapshot.docs.map(
+      (doc) =>
+        new Household(
+          doc.id,
+          doc.data().name,
+          doc.data().admins,
+          doc.data().people
+        )
+    );
+  }
     static async deleteHousehold(householdId, db = getFirestore()) {
         try {
             const householdDoc = doc(db, `households/${householdId}`);
@@ -93,6 +106,19 @@ class Household {
         }
     }
 
+  static async updateHousehold(householdId, household) {
+    const householdDoc = doc(firestore, `household/${householdId}`);
+    await updateDoc(householdDoc, {
+      name: household.name,
+      admins: household.admins,
+      people: household.people,
+    });
+  }
+
+  static async deleteHousehold(householdId) {
+    const householdDoc = doc(firestore, `household/${householdId}`);
+    await deleteDoc(householdDoc);
+  }
     static async createHousehold(household, userId) {
         const householdCollection = collection(firestore, `household`);
         const userCreatingHouseholdRef = doc(firestore, "users", userId);
@@ -139,6 +165,5 @@ class Household {
 
 
 }
-
 
 export { Household };
