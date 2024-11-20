@@ -303,7 +303,7 @@ export const CreateAccount = ({ navigation }) => {
               value={password}
               placeholder="Password"
               autoCapitalize="none"
-              secureTextEntry="true"
+              secureTextEntry={true}
               onChangeText={(password) => setPassword(password)}
               onFocus={() => setFocusedInput("password")}
               onBlur={() => validateInput("password")}
@@ -336,6 +336,6 @@ export const CreateAccount = ({ navigation }) => {
       )}
     </View>
   );
-}
+};
 
 export default CreateAccount;

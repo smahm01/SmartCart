@@ -29,7 +29,7 @@ export const Home = () => {
       return;
     }
 
-    const householdsCollection = collection(firestore, "household");
+    const householdsCollection = collection(firestore, "households");
     const userDocRef = doc(firestore, "users", currentUser.uid);
     const q = query(
       householdsCollection,

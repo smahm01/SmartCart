@@ -4,9 +4,10 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import Feather from "@expo/vector-icons/Feather";
 import { Household } from "../firebase/models/Household";
 import { auth } from "../firebase/config";
+import { getFirestore, doc } from "firebase/firestore";
 
 export const CreateHouseholdBottomSheetForm = ({ onClose }) => {
-  const snapPoints = useMemo(() => ["20%", "80%"], []);
+  const snapPoints = useMemo(() => ["70%"], []);
   const [householdName, setHouseholdName] = useState("");
   const [isHouseholdNameValid, setIsHouseholdNameValid] = useState(false);
   const [householdNameProvided, setHouseholdNameProvided] = useState(false);
@@ -25,9 +26,26 @@ export const CreateHouseholdBottomSheetForm = ({ onClose }) => {
     }
   };
 
+  const validateInput = () => {
+    if (householdNameProvided) {
+      if (isHouseholdNameValid) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  };
+
   const createNewHousehold = async () => {
     try {
-      const householdToCreate = new Household("", householdName, [], []);
+      const db = getFirestore();
+      const userDocRef = doc(db, `users/${curentUser.uid}`);
+      const householdToCreate = new Household(
+        householdName,
+        [userDocRef],
+        [userDocRef],
+        ""
+      );
       const householdDocRef = await Household.createHousehold(
         householdToCreate
       );
@@ -70,18 +88,20 @@ export const CreateHouseholdBottomSheetForm = ({ onClose }) => {
               ></TextInput>
               {householdNameProvided && !isHouseholdNameValid ? (
                 <Text style={styles.invalidInput}>
-                  Name must contain leat 5 characters.
+                  Name must contain at least 5 characters.
                 </Text>
               ) : null}
             </View>
 
-            <Pressable style={styles.createHouseholdButton}>
-              <Text
-                style={styles.createHouseholdButtonText}
-                onPress={createNewHousehold}
-              >
-                Create
-              </Text>
+            <Pressable
+              style={[
+                styles.createHouseholdButton,
+                validateInput() ? null : styles.disabledButton,
+              ]}
+              disabled={validateInput() ? false : true}
+              onPress={createNewHousehold}
+            >
+              <Text style={styles.createHouseholdButtonText}>Create</Text>
             </Pressable>
           </View>
         </BottomSheetView>
@@ -96,9 +116,10 @@ const styles = StyleSheet.create({
   },
 
   createHouseholdTitleContainer: {
-    flex: 1,
+    flexGrow: 1, // Ensures title stays visible when typing
     flexDirection: "row",
     justifyContent: "space-between",
+    marginVertical: 10, // Added margin to prevent title from shifting
   },
 
   createHouseholdTitle: {
@@ -109,9 +130,9 @@ const styles = StyleSheet.create({
 
   househouldInputContainer: {
     display: "flex",
-    flexDirection: "row",
+    flexDirection: "row", // Changed from row to column for better input alignment
     alignItems: "flex-start",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     margin: 10,
   },
 
@@ -125,12 +146,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: "#ccc",
+    marginBottom: 10, // Added margin for spacing
+    marginLeft: 10,
   },
 
   invalidInput: {
     color: "#EF2A39",
     fontWeight: "500",
-    marginTop: 1,
+    padding: 0,
+    marginTop: 0,
+    marginBottom: 0,
+    marginLeft: 10,
   },
 
   createHouseholdButton: {
@@ -148,5 +174,11 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "700",
     fontSize: 16,
+  },
+
+  disabledButton: {
+    backgroundColor: "gray",
+    borderColor: "gray",
+    opacity: 0.6,
   },
 });
