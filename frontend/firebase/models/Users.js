@@ -41,6 +41,39 @@ class User {
         }
     }
 
+    static async getUsersByName(searchName, db = getFirestore()) {
+      if (!searchName) {
+        return [];
+      }
+  
+      try {
+        const usersCollection = collection(db, `users`);
+        const snapshot = await getDocs(usersCollection);
+        if (!snapshot.empty) {
+          const users = snapshot.docs
+            .filter((doc) =>
+              doc.data().name.toLowerCase().startsWith(searchName.toLowerCase())
+            )
+            .map(
+              (doc) =>
+                new User(
+                  doc.data().name,
+                  doc.data().email,
+                  doc.data().phoneNumber,
+                  doc.id
+                )
+            );
+          return users;
+        } else {
+          console.error("No users found");
+          return [];
+        }
+      } catch (error) {
+        console.error("Error getting users:", error);
+        throw error;
+      }
+    }
+
     static async createUser(user, db = getFirestore()) {
         try {
             const userDocRef = doc(db, 'users', user.uid);
