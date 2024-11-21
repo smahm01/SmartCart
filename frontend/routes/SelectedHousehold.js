@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { ShoppingList } from "../screens/ShoppingList";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,61 +7,104 @@ import { Pantry } from "../screens/Pantry";
 import { Fridge } from "../screens/Fridge";
 import { Members } from "../screens/Members";
 import { ScanItem } from "../screens/ScanItem";
+import { HouseholdContext } from "../context/HouseholdContext";
 
 const Tab = createBottomTabNavigator();
 
-export const SelectedHousehold = () => {
+export const SelectedHousehold = ({ route }) => {
+  const { householdName, householdId } = route.params;
+
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size, focused }) => {
-          let iconName;
-
-          switch (route.name) {
-            case "Lists":
-              iconName = focused ? "cart" : "cart-outline";
-              break;
-            case "Pantry":
-              iconName = focused ? "file-tray" : "file-tray-outline";
-              break;
-            case "Scan":
-              iconName = focused ? "scan" : "scan-outline";
-              break;
-            case "Fridge":
-              iconName = focused ? "snow" : "snow-outline";
-              break;
-            case "Manage":
-              iconName = focused ? "people" : "people-outline";
-              break;
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarLabel: ({ color, focused }) => (
-          <Text
-            style={{
-              fontSize: 10,
-              fontWeight: focused ? "bold" : "normal",
-              color,
-            }}
-          >
-            {route.name}
-          </Text>
-        ),
-        tabBarStyle: styles.tabBarStyle,
-        tabBarItemStyle: styles.tabBarItemStyle,
-        tabBarActiveBackgroundColor: "#ef2a39",
-        tabBarActiveTintColor: "#ffffff",
-        tabBarInactiveTintColor: "#0007",
-        headerShown: false,
-      })}
+    <HouseholdContext.Provider
+      value={{ householdId: householdId, householdName: householdName }}
     >
-      <Tab.Screen name="Lists" component={ShoppingList} />
-      <Tab.Screen name="Pantry" component={Pantry} />
-      <Tab.Screen name="Scan" component={ScanItem} />
-      <Tab.Screen name="Fridge" component={Fridge} />
-      <Tab.Screen name="Manage" component={Members} />
-    </Tab.Navigator>
+      <Tab.Navigator
+        key={householdId}
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ color, size, focused }) => {
+            let iconName;
+
+            switch (route.name) {
+              case "Lists":
+                iconName = focused ? "cart" : "cart-outline";
+                break;
+              case "Pantry":
+                iconName = focused ? "file-tray" : "file-tray-outline";
+                break;
+              case "Scan":
+                iconName = focused ? "scan" : "scan-outline";
+                break;
+              case "Fridge":
+                iconName = focused ? "snow" : "snow-outline";
+                break;
+              case "Manage":
+                iconName = focused ? "people" : "people-outline";
+                break;
+            }
+
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarLabel: ({ color, focused }) => (
+            <Text
+              style={{
+                fontSize: 10,
+                fontWeight: focused ? "bold" : "normal",
+                color,
+              }}
+            >
+              {route.name}
+            </Text>
+          ),
+          tabBarStyle: styles.tabBarStyle,
+          tabBarItemStyle: styles.tabBarItemStyle,
+          tabBarActiveBackgroundColor: "#ef2a39",
+          tabBarActiveTintColor: "#ffffff",
+          tabBarInactiveTintColor: "#0007",
+          headerShown: false,
+        })}
+      >
+        <Tab.Screen
+          name="Lists"
+          component={ShoppingList}
+          initialParams={{
+            householdId: householdId,
+            householdName: householdName,
+          }}
+        />
+        <Tab.Screen
+          name="Pantry"
+          component={Pantry}
+          initialParams={{
+            householdId: householdId,
+            householdName: householdName,
+          }}
+        />
+        <Tab.Screen
+          name="Scan"
+          component={ScanItem}
+          initialParams={{
+            householdId: householdId,
+            householdName: householdName,
+          }}
+        />
+        <Tab.Screen
+          name="Fridge"
+          component={Fridge}
+          initialParams={{
+            householdId: householdId,
+            householdName: householdName,
+          }}
+        />
+        <Tab.Screen
+          name="Manage"
+          component={Members}
+          initialParams={{
+            householdId: householdId,
+            householdName: householdName,
+          }}
+        />
+      </Tab.Navigator>
+    </HouseholdContext.Provider>
   );
 };
 

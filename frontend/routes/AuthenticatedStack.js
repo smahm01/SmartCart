@@ -53,8 +53,8 @@ export const AuthenticatedStack = () => {
         component={SelectedHousehold}
         options={{
           drawerLabel: () => null,
-          drawerItemStyle: { display: "none" }, 
-          headerTitle: "", 
+          drawerItemStyle: { display: "none" },
+          headerTitle: "",
         }}
       />
     </Drawer.Navigator>

@@ -19,7 +19,7 @@
     "@react-navigation/drawer": "^6.7.2",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/stack": "^6.4.1",
-    "expo": "^52.0.8",
+    "expo": "52.0.9",
     "expo-status-bar": "2.0.0",
     "firebase": "^10.13.2",
     "firebase-admin": "^12.7.0",
