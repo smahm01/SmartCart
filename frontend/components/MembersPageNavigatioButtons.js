@@ -66,7 +66,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     justifyContent: "flex-start",
-    margin: 5,
+    marginHorizontal: 5,
+    marginBottom: 10
   },
 
   memberPageButton: {

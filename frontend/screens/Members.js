@@ -14,6 +14,7 @@ export const Members = () => {
         selectedOption={selectedOption}
       ></MembersPageNavigatioButtons>
 
+      {/** If the selected option is "Invite", display the search bar */}
       {selectedOption == "Invite" ? (
         <View>
           <InviteNewMemberSearchBar />
@@ -29,6 +30,7 @@ export const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "flex-start",
     alignItems: "flex-start",
+    backgroundColor: "white",
   },
 
   membersPageTitle: {

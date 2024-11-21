@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import { User } from "../firebase/models/Users";
 import { SearchBar } from "@rneui/themed";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import Feather from "@expo/vector-icons/Feather";
+import { InviteNewMemberSearchResults } from "./InviteNewMemberSearchResults";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 export const InviteNewMemberSearchBar = () => {
   const [searchName, setSearchName] = useState("");
@@ -14,56 +16,80 @@ export const InviteNewMemberSearchBar = () => {
       setSearchResults(usersByName);
     };
 
-    if (searchName.length > 0) {
-      fetchUsersByName();
-    }
+    fetchUsersByName();
   }, [searchName]);
 
-  useEffect(() => {
-    console.log(searchResults);
-  }, [searchResults]);
-
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        searchName.length > 0 ? styles.container : styles.containerNoInput,
+      ]}
+    >
       <SearchBar
         containerStyle={styles.searchBarContainerStyle}
         inputContainerStyle={styles.searchBarInputContainerStyle}
         inputStyle={styles.searchBarInputStyle}
         placeholder="Enter name of the person to invite"
-        searchIcon={
-          <MaterialIcons name="person-search" size={28} color="black" />
-        }
+        searchIcon={<Feather name="search" size={26} color="#ef2a39" />}
         onChangeText={(inputName) => {
           setSearchName(inputName);
         }}
         value={searchName}
       ></SearchBar>
+      {searchName.length > 0 ? (
+        <InviteNewMemberSearchResults usersToDisplay={searchResults} />
+      ) : (
+        <View style={styles.noInputInstructionsContainer}>
+          <FontAwesome5 name="user-friends" size={68} color="#969696" />
+          <Text style={{ textAlign: "center", fontSize: 18, color: "#969696" }}>
+            Search for a user to invite
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: "column",
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
+  containerNoInput: {
+    flexShrink: 1,
+    marginHorizontal: 5,
+    borderRadius: 20,
+    marginTop: 5,
   },
+
+  container: {
+    flexShrink: 1,
+    marginHorizontal: 5,
+    marginTop: 5,
+  },
+
   searchBarContainerStyle: {
     flexDirection: "row",
     padding: 0,
-    marginVertical: 5,
-
-    backgroundColor: "transparent",
+    borderTopWidth: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: "#969696",
+    borderRadius: 20,
   },
 
   searchBarInputContainerStyle: {
-    backgroundColor: "transparent",
+    backgroundColor: "white",
     padding: 0,
+    borderWidth: 1,
+    borderColor: "#969696",
+    borderRadius: 20,
   },
 
   searchBarInputStyle: {
-    backgroundColor: "transparent",
     color: "black",
+  },
+
+  noInputInstructionsContainer: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 150,
   },
 });
