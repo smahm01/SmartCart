@@ -126,7 +126,31 @@ class Household {
         }
     }
 
-
+    static async isUserAdminOfHousehold(
+      userId,
+      householdId,
+      db = getFirestore()
+    ) {
+      try {
+        const householdDocRef = doc(db, `households/${householdId}`);
+  
+        const householdDoc = await getDoc(householdDocRef);
+        if (householdDoc.exists()) {
+          const admins = householdDoc.data().admins;
+  
+          const adminMatch = admins.some((admin) => admin.id === userId);
+  
+          if (adminMatch) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+      } catch (error) {
+        console.error("Error getting household:", error);
+        throw error;
+      }
+    }
 }
 
 export { Household };

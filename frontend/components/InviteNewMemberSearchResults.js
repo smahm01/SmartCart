@@ -84,9 +84,6 @@ export const InviteNewMemberSearchResults = ({ usersToDisplay }) => {
       <ToastManager
         position={"top"}
         positionValue={-160}
-        // animationStyle={"zoomInOut"}
-        // animationIn={"slideInRight"}
-        // animationOut={"slideOutRight"}
         animationStyle={"upInUpOut"}
         showProgressBar={false}
         showCloseIcon={false}
