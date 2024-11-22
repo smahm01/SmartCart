@@ -4,25 +4,35 @@ import Entypo from "@expo/vector-icons/Entypo";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useNavigation } from "@react-navigation/native";
 
-const HouseholdCard = ({ name, numberOfMembers}) => {
+export const HouseholdCard = ({
+  householdName,
+  numberOfMembers,
+  householdId,
+}) => {
   const navigation = useNavigation();
 
   return (
-        <Pressable style={styles.cardContainer} onPress={() => navigation.navigate("SelectedHousehold")}>
-          <View>
-            <View style={styles.householdNameContainer}>
-              <Entypo name="home" size={32} color="#ffffff" />
-              <Text style={styles.householdName}>{name}</Text>
-            </View>
-            <View style={styles.householdInformation}>
-              <FontAwesome name="users" size={16} color="#ffffff" />
-              <Text style={styles.numberOfMembers}>
-                {numberOfMembers}
-              </Text>
-            </View>
-          </View>
-        </Pressable>
-      )
+    <Pressable
+      style={styles.cardContainer}
+      onPress={() =>
+        navigation.navigate("SelectedHousehold", {
+          householdName: householdName,
+          householdId: householdId,
+        })
+      }
+    >
+      <View>
+        <View style={styles.householdNameContainer}>
+          <Entypo name="home" size={32} color="#ffffff" />
+          <Text style={styles.householdName}>{householdName}</Text>
+        </View>
+        <View style={styles.householdInformation}>
+          <FontAwesome name="users" size={16} color="#ffffff" />
+          <Text style={styles.numberOfMembers}>{numberOfMembers}</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -71,5 +81,3 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 });
-
-export default HouseholdCard;

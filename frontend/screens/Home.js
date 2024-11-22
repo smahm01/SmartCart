@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList } from "react-native";
 import { auth } from "../firebase/config";
 import { AddButton } from "../components/AddButton";
 import { CreateHouseholdBottomSheetForm } from "../components/CreateHouseholdBottomSheetForm";
-import HouseholdCard from "../components/HouseholdCard";
+import { HouseholdCard } from "../components/HouseholdCard";
 import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
 import { firestore } from "../firebase/config";
 
@@ -64,8 +64,9 @@ export const Home = () => {
             data={userHouseholds}
             renderItem={({ item }) => (
               <HouseholdCard
-                name={item.name}
+                householdName={item.name}
                 numberOfMembers={item.people.length}
+                householdId={item.id}
               />
             )}
             keyExtractor={(item) => item.id}
