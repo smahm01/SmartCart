@@ -37,6 +37,7 @@ export const Invitations = () => {
           <View key={invitation.id} style={styles.card}>
             <Text>Household ID: {invitation.household.id}</Text>
             <Text>Status: {invitation.status}</Text>
+            <Text>Invited by: {invitation.inviterName}</Text>
             <Button
               title="Accept"
               onPress={() => handleAccept(invitation.id)}

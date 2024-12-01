@@ -14,6 +14,7 @@ class Invitation {
   constructor(inviterId, inviteeId, householdId, status, id = "") {
     this.inviterId = inviterId;
     this.inviteeId = inviteeId;
+    this.inviterName = inviterName;
     this.householdId = householdId;
     this.status = status;
     this.id = id;
@@ -30,6 +31,20 @@ class Invitation {
       const inviterDocRef = doc(db, `users/${inviterId}`);
       const inviteeDocRef = doc(db, `users/${inviteeId}`);
       const householdDocRef = doc(db, `households/${householdId}`);
+
+      const inviterDoc = await getDoc(inviterDocRef);
+
+      // Add checks to ensure document exists and has data
+      if (!inviterDoc.exists()) {
+        throw new Error('Inviter document does not exist');
+      }
+
+      const inviterData = inviterDoc.data();
+      if (!inviterData || !inviterData.name) {
+        throw new Error('Inviter name is missing');
+      }
+
+      const inviterName = inviterData.name;
 
       // Ensure user is not already a member of the household
       const householdDoc = await getDoc(householdDocRef);
@@ -69,6 +84,7 @@ class Invitation {
       const newInvitationDocRef = await addDoc(collection(db, "invitations"), {
         inviter: inviterDocRef,
         invitee: inviteeDocRef,
+        inviterName: inviterName,
         household: householdDocRef,
         status: "Pending",
       });
@@ -107,7 +123,7 @@ class Invitation {
       throw error;
     }
   }
-  
+
 }
 
 export { Invitation };
