@@ -82,6 +82,32 @@ class Invitation {
       throw error;
     }
   }
+
+  static async getInvitations(inviteeId, db = getFirestore()) {
+    try {
+      // Create document reference for invitee
+      const inviteeDocRef = doc(db, `users/${inviteeId}`);
+
+      // Query invitations collection for invitations sent to the invitee
+      const invitationsCollection = collection(db, "invitations");
+      const q = query(
+        invitationsCollection,
+        where("invitee", "==", inviteeDocRef)
+      );
+
+      const querySnapshot = await getDocs(q);
+      const invitations = [];
+      querySnapshot.forEach((doc) => {
+        invitations.push({ id: doc.id, ...doc.data() });
+      });
+
+      return invitations;
+    } catch (error) {
+      console.error("Error getting invitations:", error);
+      throw error;
+    }
+  }
+  
 }
 
 export { Invitation };
