@@ -1,55 +1,72 @@
 import React, { useEffect, useState } from "react";
 import { Text, View, Button, StyleSheet } from "react-native";
 import { firestore, auth } from "../firebase/config";
-import { Invitation } from "../firebase/models/Invitation"; 
+import { Invitation } from "../firebase/models/Invitation";
+import { Household } from "../firebase/models/Household";
 
 export const Invitations = () => {
   const [invitations, setInvitations] = useState([]);
 
-  useEffect(() => {
-    const fetchInvitations = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        const uid = user.uid;
-        const invites = await Invitation.getInvitations(uid);
-        setInvitations(invites);
-      }
-    };
+  const fetchInvitations = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      const uid = user.uid;
+      const invites = await Invitation.getInvitations(uid);
+      setInvitations(invites);
+    }
+  };
 
+  useEffect(() => {
     fetchInvitations();
   }, []);
 
-  const handleAccept = (invitationId) => {
-    // Handle accept invitation logic here
+  const handleAccept = async (invitationId, householdId) => {
     console.log(`Accepted invitation: ${invitationId}`);
+    console.log(`Household ID: ${householdId}`);
+
+    const household = await Household.getHousehold(householdId);
+    const invitation = await Invitation.getInvitation(invitationId);
+    
+    console.log(household);
+    console.log(invitation);
+    
+    household.people.push(invitation.invitee);
+    await Household.updateHousehold(householdId, household);
+
+    await Invitation.updateInvitationStatus(invitationId, 'Accepted');
+    fetchInvitations(); // Refresh invitations
   };
 
-  const handleRefuse = (invitationId) => {
-    // Handle refuse invitation logic here
+  const handleRefuse = async (invitationId) => {
     console.log(`Refused invitation: ${invitationId}`);
+
+    await Invitation.updateInvitationStatus(invitationId, 'Refused');
+    fetchInvitations(); // Refresh invitations
   };
 
   return (
     <View>
       <Text>Invitations to Households:</Text>
-      {invitations.length > 0 ? (
-        invitations.map((invitation) => (
-          <View key={invitation.id} style={styles.card}>
-            <Text>Household ID: {invitation.household.id}</Text>
-            <Text>Status: {invitation.status}</Text>
-            <Text>Invited by: {invitation.inviterName}</Text>
-            <Button
-              title="Accept"
-              onPress={() => handleAccept(invitation.id)}
-            />
-            <Button
-              title="Refuse"
-              onPress={() => handleRefuse(invitation.id)}
-            />
-          </View>
-        ))
+      {invitations.filter(invitation => invitation.status === "Pending").length > 0 ? (
+        invitations
+          .filter(invitation => invitation.status === "Pending")
+          .map((invitation) => (
+            <View key={invitation.id} style={styles.card}>
+              <Text>Household ID: {invitation.household.id}</Text>
+              <Text>Status: {invitation.status}</Text>
+              <Text>Invited by: {invitation.inviterName}</Text>
+              <Button
+                title="Accept"
+                onPress={() => handleAccept(invitation.id, invitation.household.id)}
+              />
+              <Button
+                title="Refuse"
+                onPress={() => handleRefuse(invitation.id)}
+              />
+            </View>
+          ))
       ) : (
-        <Text>No invitations found.</Text>
+        <Text>No pending invitations found.</Text>
       )}
     </View>
   );

@@ -1,14 +1,6 @@
 import { firestore } from "../config";
-import {
-  collection,
-  query,
-  where,
-  doc,
-  getFirestore,
-  addDoc,
-  getDocs,
-  getDoc,
-} from "firebase/firestore";
+import { updateDoc, collection, query, where, doc, getFirestore, addDoc, getDocs, getDoc} from 'firebase/firestore';
+  
 
 class Invitation {
   constructor(inviterId, inviteeId, householdId, status, id = "") {
@@ -120,6 +112,38 @@ class Invitation {
       return invitations;
     } catch (error) {
       console.error("Error getting invitations:", error);
+      throw error;
+    }
+  }
+
+  //get invitation from id
+  static async getInvitation(invitationId, db = getFirestore()) {
+    try {
+      const invitationDocRef = doc(db, `invitations/${invitationId}`);
+      const invitationDoc = await getDoc(invitationDocRef);
+
+      if (invitationDoc.exists()) {
+        return { id: invitationDoc.id, ...invitationDoc.data() };
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error("Error getting invitation:", error);
+      throw error;
+    }
+  }
+
+  //update invitation
+  static async updateInvitationStatus(invitationId, status, db = getFirestore()) {
+    try {
+      const invitationDocRef = doc(db, `invitations/${invitationId}`);
+      await updateDoc(invitationDocRef, { status: status });
+      return {
+        success: true,
+        invitationId: invitationId,
+      };
+    } catch (error) {
+      console.error("Error updating invitation:", error);
       throw error;
     }
   }
