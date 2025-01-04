@@ -1,20 +1,24 @@
-import React, { useState } from "react";
-import { Text, View, StyleSheet, SafeAreaView, Pressable } from "react-native";
-import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import React from "react";
+import { Text, View, StyleSheet, Pressable } from "react-native";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import { useIsFocused } from "@react-navigation/native";
 import { BarcodeScannerOverlay } from "../components/BarcodeScannerOverlay";
 
-export const ScanItem = () => {
+export const ScanItem = ({ navigation }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const isFocused = useIsFocused();
 
+  const onBarcodeScanned = (upc) => {
+    navigation.navigate("ScannedItemDetails", { upc: upc });
+  };
+
+  // Camera permissions are still loading
   if (!permission) {
-    // Camera permissions are still loading.
     return <View />;
   }
 
+  // Camera permissions are not granted yet
   if (!permission.granted) {
-    // Camera permissions are not granted yet.
     return (
       <View style={styles.container}>
         <Text>We need your permission to show the camera</Text>
@@ -25,6 +29,7 @@ export const ScanItem = () => {
     );
   }
 
+  // Succesfully unmount camera if screen is not focused. Otherwise, if permission is granted show camera view
   if (isFocused) {
     return (
       <View style={styles.container}>
@@ -34,7 +39,7 @@ export const ScanItem = () => {
             barcodeTypes: ["qr", "upc_a", "upc_e"],
           }}
           onBarcodeScanned={(data) => {
-            console.log("data", data.data);
+            onBarcodeScanned(data.data);
           }}
         />
         <View style={styles.buttonContainer}></View>
