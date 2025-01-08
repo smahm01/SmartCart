@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Text, View, StyleSheet, Button } from "react-native";
+import {Text, View, StyleSheet, Button, Pressable, ActionSheetIOS} from "react-native";
 import { MembersPageNavigatioButtons } from "../components/MembersPageNavigatioButtons";
 import { InviteNewMemberSearchBar } from "../components/InviteNewMemberSearchBar";
 import { HouseholdContext } from '../context/HouseholdContext';
 import { auth } from "../firebase/config";
 import { User } from '../firebase/models/Users'; // Adjust the import based on your project structure
 import { Household } from '../firebase/models/Household';
-import { getDoc, getFirestore, doc } from 'firebase/firestore';
+import {getDoc, getFirestore, doc, updateDoc} from 'firebase/firestore';
 
 export const Members = () => {
   const [selectedOption, setSelectedOption] = useState("Members");
@@ -15,6 +15,7 @@ export const Members = () => {
   const [people, setPeople] = useState([]);
   const [admins, setAdmins] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -72,6 +73,51 @@ export const Members = () => {
     }
   };
 
+   const handleKickFromHousehold = async (person) => {
+    try {
+      const db = getFirestore();
+      const householdDocRef = doc(db, `households/${householdId}`);
+      const household = await Household.getHousehold(householdId);
+
+      // Remove the person from the household's people array
+      const updatedPeople = household.people.filter(
+        (memberRef) => memberRef.id !== person.uid
+      );
+      household.people = updatedPeople;
+
+      // Update the household in Firestore
+      await updateDoc(householdDocRef, {
+        people: updatedPeople,
+      });
+      console.log(`${person.name} has been removed from the household.`);
+    } catch (error) {
+      console.error("Error removing member from household:", error);
+    }
+  };
+
+   const handlePress = (person) => {
+     if (!isAdmin) {
+       console.log("Only admins can perform actions on members");
+       return;
+     }
+     setSelectedMember(person.uid);
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ["Cancel", "Make Admin", "Kick from Household"],
+        destructiveButtonIndex: 2, // "Kick from Household" appears in red
+        cancelButtonIndex: 0, // "Cancel" option
+      },
+      async (buttonIndex) => {
+        if (buttonIndex === 1) {
+          await handleMakeAdmin(person); // Call the make admin function
+        } else if (buttonIndex === 2) {
+          await handleKickFromHousehold(person); // Call the kick function
+        }
+        setSelectedMember(null);
+      }
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.membersPageTitle}>Household Members</Text>
@@ -95,12 +141,13 @@ export const Members = () => {
       ) : (
         <View>
           {people.map((person, index) => (
-            <View key={index} style={styles.personCard}>
+            <Pressable key={index} style={[
+              styles.personCard,
+                selectedMember === person.uid && styles.personSelectedCard,]
+            } onPress={() => handlePress(person)}
+            >
               <Text>{person.name}</Text>
-              {isAdmin && (
-                <Button title="Make Admin" onPress={() => handleMakeAdmin(person)} />
-              )}
-            </View>
+            </Pressable>
           ))}
         </View>
       )}
@@ -126,5 +173,9 @@ const styles = StyleSheet.create({
     margin: 10,
     backgroundColor: "#f0f0f0",
     borderRadius: 5,
+  },
+  personSelectedCard: {
+    borderColor: "blue", // Blue border when pressed
+    borderWidth: 2,
   },
 });
