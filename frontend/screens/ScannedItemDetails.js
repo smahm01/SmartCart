@@ -149,6 +149,6 @@ const styles = StyleSheet.create({
   availableLists: {
     flex: 1,
     marginHorizontal: 20,
-    backgroundColor: "red", 
+    backgroundColor: "red",
   },
 });
