@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useContext } from "react";
-import {Text, View, StyleSheet, Button, Pressable, ActionSheetIOS} from "react-native";
-import { MembersPageNavigatioButtons } from "../components/MembersPageNavigatioButtons";
-import { InviteNewMemberSearchBar } from "../components/InviteNewMemberSearchBar";
-import { HouseholdContext } from '../context/HouseholdContext';
-import { auth } from "../firebase/config";
-import { User } from '../firebase/models/Users'; // Adjust the import based on your project structure
-import { Household } from '../firebase/models/Household';
-import {getDoc, getFirestore, doc, updateDoc} from 'firebase/firestore';
+import React, {useContext, useEffect, useState} from "react";
+import {ActionSheetIOS, Pressable, StyleSheet, Text, View} from "react-native";
+import {MembersPageNavigatioButtons} from "../components/MembersPageNavigatioButtons";
+import {InviteNewMemberSearchBar} from "../components/InviteNewMemberSearchBar";
+import {HouseholdContext} from '../context/HouseholdContext';
+import {auth} from "../firebase/config";
+import {User} from '../firebase/models/Users'; // Adjust the import based on your project structure
+import {Household} from '../firebase/models/Household';
+import {doc, getDoc, getFirestore, updateDoc} from 'firebase/firestore';
 
 export const Members = () => {
   const [selectedOption, setSelectedOption] = useState("Members");
@@ -124,8 +124,8 @@ export const Members = () => {
       <MembersPageNavigatioButtons
         onPress={setSelectedOption}
         selectedOption={selectedOption}
+        householdId={householdId}
       />
-
       {selectedOption === "Invite" ? (
         <View>
           <InviteNewMemberSearchBar />

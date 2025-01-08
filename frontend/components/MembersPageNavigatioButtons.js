@@ -1,7 +1,8 @@
 import React from "react";
 import { Text, View, StyleSheet, Pressable } from "react-native";
+import {sendInviteViaSMS} from "../services/smsService.js";
 
-export const MembersPageNavigatioButtons = ({ onPress, selectedOption }) => {
+export const MembersPageNavigatioButtons = ({ onPress, selectedOption, householdId }) => {
   return (
     <View style={styles.container}>
       <Pressable
@@ -58,6 +59,32 @@ export const MembersPageNavigatioButtons = ({ onPress, selectedOption }) => {
           Invite
         </Text>
       </Pressable>
+        <Pressable
+        style={[
+          selectedOption === "Invite via SMS"
+            ? styles.memberPageButton
+            : styles.memberPageButtonNotSelected,
+        ]}
+        onPress={() => {
+            if (selectedOption === "Invite via SMS") {
+                sendInviteViaSMS(householdId)
+                    .then(() => console.log("Invite sent successfully!"))
+                    .catch((error) => console.error("Error in sendInviteViaSMS:", error));
+            }
+            onPress("Invite via SMS")}}
+      >
+        <Text
+          style={[
+            selectedOption === "Invite via SMS"
+              ? styles.memberPageButtonText
+              : styles.memberPageButtonTextNotSelected,
+          ]}
+        >
+          Invite via SMS
+        </Text>
+      </Pressable>
+
+
     </View>
   );
 };
