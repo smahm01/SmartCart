@@ -86,7 +86,7 @@ export const CreateAccount = ({ navigation }) => {
         setPhoneNumberProvided(false);
       } else {
         setPhoneNumberProvided(true);
-        const numberRegex = /^\d{3}-\d{3}-\d{4}$/;
+        const numberRegex = /^\d{10}$/;
         if (numberRegex.test(phoneNumber)) {
           setPhoneNumberValidated(true);
           setPhoneNumberValidationText("");
