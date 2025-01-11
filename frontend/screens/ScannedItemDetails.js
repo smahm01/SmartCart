@@ -45,7 +45,12 @@ export const ScannedItemDetails = ({ route }) => {
   const getItemDetails = async () => {
     try {
       const response = await axios.get(
-        `https://world.openfoodfacts.net/api/v2/product/${upc}?fields=product_name,nutriscore_data,nutriments,nutrition_grades,brands,categories,allergens`
+        `https://world.openfoodfacts.net/api/v2/product/${upc}?fields=product_name,nutriscore_data,nutriments,nutrition_grades,brands,categories,allergens`,
+        {
+          headers: {
+            "User-Agent": "SmartCart/dev_version (sadek.mahmood@mail.mcgill.ca) ",
+          },
+        }
       );
 
       const data = response.data.product;
