@@ -6,7 +6,7 @@ import { Text, StyleSheet } from "react-native";
 import { Pantry } from "../screens/Pantry";
 import { Fridge } from "../screens/Fridge";
 import { Members } from "../screens/Members";
-import { ScanItem } from "../screens/ScanItem";
+import { ScanItemStack } from "./ScanItemStack";
 import { HouseholdContext } from "../context/HouseholdContext";
 
 const Tab = createBottomTabNavigator();
@@ -81,7 +81,7 @@ export const SelectedHousehold = ({ route }) => {
         />
         <Tab.Screen
           name="Scan"
-          component={ScanItem}
+          component={ScanItemStack}
           initialParams={{
             householdId: householdId,
             householdName: householdName,
