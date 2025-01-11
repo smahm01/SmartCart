@@ -12,16 +12,24 @@ import { useNavigation } from "@react-navigation/native";
 import { SelectList } from "react-native-dropdown-select-list";
 import { HouseholdContext } from "../context/HouseholdContext";
 import { ShoppingList } from "../firebase/models/ShoppingList";
+import { RequestedItem } from "../firebase/models/RequestedItem";
+import { auth } from "../firebase/config";
+import ToastManager, { Toast } from "toastify-react-native";
 
 export const ScannedItemDetails = ({ route }) => {
   const [itemDetails, setItemDetails] = useState({});
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
-  const [selected, setSelected] = useState("");
+  const [selectedList, setSelectedList] = useState("");
+  const [selectedQuantity, setSelectedQuantity] = useState("");
   const [householdShoppingLists, setHouseholdShoppingLists] = useState([]);
   const { upc } = route.params;
   const { householdId } = useContext(HouseholdContext);
+
+  const showSuccessToast = (message) => {
+    Toast.success(message);
+  };
 
   const fetchHouseholdShoppingLists = async () => {
     try {
@@ -56,7 +64,10 @@ export const ScannedItemDetails = ({ route }) => {
               : "Unknown",
           allergens:
             data.allergens !== ""
-              ? data.allergens.split(",").map((a) => a.trim())
+              ? data.allergens
+                  .replaceAll("en:", "")
+                  .split(",")
+                  .map((a) => a.trim())
               : "Unknown",
           protein_per_100g: data.nutriments.proteins_100g || "Unknown",
           fat_per_100g: data.nutriments.fat_100g || "Unknown",
@@ -66,9 +77,39 @@ export const ScannedItemDetails = ({ route }) => {
       }
     } catch (err) {
       setError(true);
-      console.log("Error fetching product details:", err);
+      console.error("Error fetching product details:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddItemToList = async () => {
+    try {
+      // Create requested item object
+      const requestedItem = new RequestedItem(
+        householdId,
+        selectedList,
+        auth.currentUser.uid,
+        itemDetails.product_name,
+        itemDetails.product_brand,
+        itemDetails.categories,
+        itemDetails.allergens,
+        selectedQuantity,
+        false,
+        new Date().toISOString().substring(0, 10),
+        upc
+      );
+
+      // Add requested item to shopping list
+      const response = await RequestedItem.createRequestedItem(
+        householdId,
+        selectedList,
+        requestedItem
+      );
+    } catch (error) {
+      console.error("Error adding item to list:", error);
+    } finally {
+      showSuccessToast("Item added to shopping list");
     }
   };
 
@@ -124,8 +165,6 @@ export const ScannedItemDetails = ({ route }) => {
     value: list.name,
   }));
 
-  console.log(formattedShoppingLists);
-
   return (
     <View style={styles.container}>
       <ScannedItemDisplayCard
@@ -139,45 +178,82 @@ export const ScannedItemDetails = ({ route }) => {
         calories={itemDetails.cal_per_100g}
         productImageUrl={itemDetails}
       />
-      <Text style={styles.selectListTitle}>Select Shopping Lists:</Text>
-      <SelectList
-        setSelected={setSelected}
-        data={formattedShoppingLists}
-        save="value"
-        placeholder="Choose Shopping List(s)"
-        search={false}
-        searchPlaceholder="Search Shopping Lists"
-        selectedText="items selected"
-        style={{
-          ...styles.selectList,
-          backgroundColor:
-            selected !== "" ? "rgba(0, 255, 0, 0.3)" : "rgba(255, 0, 0, 0.3)",
-        }}
-        boxStyles={{
-          ...styles.selectBox,
-          backgroundColor:
-            selected !== "" ? "rgba(0, 255, 0, 0.3)" : "rgba(255, 0, 0, 0.3)",
-          borderColor: selected !== "" ? "green" : "red",
-          borderWidth: 2,
-        }}
-        dropdownStyles={styles.dropdownStyles}
-      />
-      {selected !== "" && (
-        <View style={styles.confirmationContainer}>
-          <Text style={styles.confirmationText}>
-            Do you want to add this item to {selected}?
-          </Text>
-          <Pressable
-            // onPress={handleAddItemToList}
-            style={({ pressed }) => [
-              styles.confirmButton,
-              { opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <Text style={styles.confirmButtonText}>Confirm</Text>
-          </Pressable>
-        </View>
-      )}
+      <Text style={styles.selectListTitle}>
+        Select Shopping List and Quantity
+      </Text>
+      <View style={styles.selectListContainer}>
+        <SelectList
+          setSelected={setSelectedList}
+          data={formattedShoppingLists}
+          save="key"
+          placeholder={
+            selectedList !== "" ? selectedList : "Select a Shopping List"
+          }
+          search={false}
+          searchPlaceholder="Search Shopping Lists"
+          selectedText="items selected"
+          style={styles.selectList}
+          boxStyles={{
+            ...styles.selectBox,
+            backgroundColor:
+              selectedList !== ""
+                ? "rgba(0, 255, 0, 0.3)"
+                : "rgba(255, 0, 0, 0.3)",
+            borderColor: selectedList !== "" ? "green" : "red",
+            borderWidth: 2,
+          }}
+          dropdownStyles={styles.dropdownOverlay}
+        />
+        <SelectList
+          setSelected={setSelectedQuantity}
+          data={["1", "2", "3", "4+"]}
+          save="value"
+          placeholder={selectedQuantity !== "" ? selectedQuantity : "Quantity"}
+          search={false}
+          searchPlaceholder="Search Shopping Lists"
+          selectedText="items selected"
+          style={styles.selectList}
+          boxStyles={{
+            ...styles.selectBox,
+            backgroundColor:
+              selectedQuantity !== ""
+                ? "rgba(0, 255, 0, 0.3)"
+                : "rgba(255, 0, 0, 0.3)",
+            borderColor: selectedQuantity !== "" ? "green" : "red",
+            borderWidth: 2,
+          }}
+          dropdownStyles={styles.dropdownOverlay}
+        />
+        {selectedList !== "" && selectedQuantity !== "" && (
+          <View style={styles.confirmationContainer}>
+            <Pressable
+              onPress={handleAddItemToList}
+              style={({ pressed }) => [
+                styles.confirmButton,
+                { opacity: pressed ? 0.7 : 1 },
+              ]}
+            >
+              <Text style={styles.confirmButtonText}>Confirm</Text>
+            </Pressable>
+          </View>
+        )}
+        <ToastManager
+          position={"top"}
+          positionValue={-440}
+          animationStyle={"upInUpOut"}
+          showProgressBar={false}
+          showCloseIcon={false}
+          textStyle={{
+            fontSize: 14,
+            color: "#ffffff",
+            fontWeight: "bold",
+          }}
+          style={{
+            borderRadius: 20,
+            backgroundColor: "#46A24A",
+          }}
+        />
+      </View>
     </View>
   );
 };
@@ -231,8 +307,13 @@ const styles = StyleSheet.create({
   selectListTitle: {
     fontSize: 18,
     marginHorizontal: 15,
-    marginVertical: 5,
+    marginVertical: 10,
     fontWeight: "bold",
+  },
+
+  selectList: {
+    width: "100%",
+    marginBottom: 10,
   },
 
   selectBox: {
@@ -240,30 +321,28 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
   },
 
-  dropdownStyles: {
-    borderRadius: 8,
+  dropdownOverlay: {
+    position: "absolute",
+    top: 45,
+    right: 20,
+    zIndex: 10,
     borderColor: "#ccc",
-    marginHorizontal: 15,
+    borderWidth: 1,
+    borderRadius: 8,
+    backgroundColor: "#fff",
   },
 
   confirmationContainer: {
-    marginTop: 20,
     justifyContent: "center",
     alignItems: "center",
-  },
-
-  confirmationText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
   },
 
   confirmButton: {
     backgroundColor: "#4CAF50",
     paddingVertical: 12,
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
     borderRadius: 20,
-    marginTop: 10,
+    marginRight: 20,
   },
 
   confirmButtonText: {
@@ -271,5 +350,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
+  },
+
+  selectListContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 });

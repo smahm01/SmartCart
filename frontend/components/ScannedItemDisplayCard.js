@@ -36,14 +36,13 @@ export const ScannedItemDisplayCard = ({
       return <Text style={styles.highlightedText}>N/A</Text>;
     } else {
       return allergens.map((allergen, index) => {
-        const allergenName = allergen.replace("en:", "");
         const randomColor = pastelColors[index % pastelColors.length];
         return (
           <Text
             key={index}
             style={[styles.allergenTag, { backgroundColor: randomColor }]}
           >
-            {allergenName.toUpperCase()}
+            {allergen.toUpperCase()}
           </Text>
         );
       });
@@ -141,8 +140,8 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     backgroundColor: "white",
-    padding: 20,
-    marginHorizontal: 20,
+    padding: 10,
+    marginHorizontal: 10,
     marginVertical: 10,
     borderRadius: 20,
     shadowColor: "#EF2A39",
