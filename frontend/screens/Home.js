@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, FlatList } from "react-native";
 import { auth } from "../firebase/config";
 import { AddButton } from "../components/AddButton";
-import { CreateHouseholdBottomSheetForm } from "../components/CreateHouseholdBottomSheetForm";
+import {CreateHouseholdPopup} from "../components/CreateHouseholdPopup.js";
 import { HouseholdCard } from "../components/HouseholdCard";
 import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
 import { firestore } from "../firebase/config";
@@ -75,7 +75,7 @@ export const Home = () => {
 
       {showCreateHouseholBottomSheet && (
         <View style={styles.bottomSheetOverlay}>
-          <CreateHouseholdBottomSheetForm
+          <CreateHouseholdPopup
             onClose={closeCreateHouseholdBottomSheet}
           />
         </View>
