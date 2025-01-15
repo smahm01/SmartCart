@@ -116,10 +116,10 @@ class Household {
             const households = snapshot.docs.map(
                 (doc) =>
                     new Household(
-                        doc.id,
                         doc.data().name,
                         doc.data().admins,
-                        doc.data().people
+                        doc.data().people,
+                        doc.id
                     )
             );
             return households;
