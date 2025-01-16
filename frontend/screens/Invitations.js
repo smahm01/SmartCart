@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Text, View, Button, StyleSheet } from "react-native";
-import { firestore, auth } from "../firebase/config";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { auth } from "../firebase/config";
 import { Invitation } from "../firebase/models/Invitation";
 import { Household } from "../firebase/models/Household";
+import {InvitationCard} from "../components/InvitationCard.js";
 
 export const Invitations = () => {
   const [invitations, setInvitations] = useState([]);
@@ -16,71 +17,70 @@ export const Invitations = () => {
     }
   };
 
+  const getHouseholdName = async (householdId) => {
+    const household = await Household.getHousehold(householdId);
+    return household.name;
+  }
+
   useEffect(() => {
     fetchInvitations();
   }, []);
 
   const handleAccept = async (invitationId, householdId) => {
-    console.log(`Accepted invitation: ${invitationId}`);
-    console.log(`Household ID: ${householdId}`);
-
     const household = await Household.getHousehold(householdId);
     const invitation = await Invitation.getInvitation(invitationId);
-    
-    console.log(household);
-    console.log(invitation);
-    
     household.people.push(invitation.invitee);
     await Household.updateHousehold(householdId, household);
-
-    await Invitation.updateInvitationStatus(invitationId, 'Accepted');
-    fetchInvitations(); // Refresh invitations
+    await Invitation.updateInvitationStatus(invitationId, "Accepted");
+    fetchInvitations();
   };
 
   const handleRefuse = async (invitationId) => {
-    console.log(`Refused invitation: ${invitationId}`);
-
-    await Invitation.updateInvitationStatus(invitationId, 'Refused');
-    fetchInvitations(); // Refresh invitations
+    await Invitation.updateInvitationStatus(invitationId, "Refused");
+    fetchInvitations();
   };
 
   return (
-    <View>
-      <Text>Invitations to Households:</Text>
-      {invitations.filter(invitation => invitation.status === "Pending").length > 0 ? (
-        invitations
-          .filter(invitation => invitation.status === "Pending")
-          .map((invitation) => (
-            <View key={invitation.id} style={styles.card}>
-              <Text>Household ID: {invitation.household.id}</Text>
-              <Text>Status: {invitation.status}</Text>
-              <Text>Invited by: {invitation.inviterName}</Text>
-              <Button
-                title="Accept"
-                onPress={() => handleAccept(invitation.id, invitation.household.id)}
+    <View style={styles.container}>
+      <Text style={styles.title}>Invitations</Text>
+      {invitations.filter((inv) => inv.status === "Pending").length > 0 ? (
+        <ScrollView>
+          {invitations
+            .filter((invitation) => invitation.status === "Pending")
+            .map((invitation) => (
+              <InvitationCard
+                key={invitation.id}
+                householdName={getHouseholdName(invitation.household.id)}
+                inviterName={invitation.inviterName}
+                status={invitation.status}
+                onAccept={() => handleAccept(invitation.id, invitation.household.id)}
+                onRefuse={() => handleRefuse(invitation.id)}
               />
-              <Button
-                title="Refuse"
-                onPress={() => handleRefuse(invitation.id)}
-              />
-            </View>
-          ))
+            ))}
+        </ScrollView>
       ) : (
-        <Text>No pending invitations found.</Text>
+        <Text style={styles.noInvitationsText}>No pending invitations found.</Text>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    padding: 10,
-    margin: 10,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: "#f5f5f5",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#EF2A39",
+  },
+  noInvitationsText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginTop: 20,
   },
 });
