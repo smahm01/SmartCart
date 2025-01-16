@@ -7,6 +7,8 @@ import { auth } from "../firebase/config";
 import { User } from '../firebase/models/Users'; // Adjust the import based on your project structure
 import { Household } from '../firebase/models/Household';
 import {getDoc, getFirestore, doc, updateDoc} from 'firebase/firestore';
+import {UserCard} from "../components/UserCard.js";
+
 
 export const Members = () => {
   const [selectedOption, setSelectedOption] = useState("Members");
@@ -133,23 +135,19 @@ export const Members = () => {
       ) : selectedOption === "Admins" ? (
         <View>
           {admins.map((admin, index) => (
-            <View key={index} style={styles.personCard}>
-              <Text>{admin.name} (Admin)</Text>
-            </View>
+              <UserCard key={index} name={admin.name} />
           ))}
         </View>
       ) : (
-        <View>
-          {people.map((person, index) => (
-            <Pressable key={index} style={[
-              styles.personCard,
-                selectedMember === person.uid && styles.personSelectedCard,]
-            } onPress={() => handlePress(person)}
-            >
-              <Text>{person.name}</Text>
-            </Pressable>
-          ))}
-        </View>
+          <View>
+            {people.map((person, index) => (
+                <UserCard key={index}
+                          name={person.name}
+                          onPress={()=> handlePress(person)}
+                >
+                </UserCard>
+            ))}
+          </View>
       )}
     </View>
   );
@@ -167,15 +165,5 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "800",
     margin: 10,
-  },
-  personCard: {
-    padding: 10,
-    margin: 10,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 5,
-  },
-  personSelectedCard: {
-    borderColor: "blue", // Blue border when pressed
-    borderWidth: 2,
   },
 });
