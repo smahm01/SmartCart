@@ -38,13 +38,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 15,
-    backgroundColor: "#E0E0E0",
-  },
   textContainer: {
     flex: 1,
   },
