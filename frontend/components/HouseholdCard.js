@@ -1,34 +1,20 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import {View, Text, StyleSheet, TouchableOpacity, Image, Pressable} from "react-native";
+import {useNavigation} from "@react-navigation/native";
 import Entypo from "@expo/vector-icons/Entypo";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useNavigation } from "@react-navigation/native";
 
-export const HouseholdCard = ({
-  householdName,
-  numberOfMembers,
-  householdId,
-}) => {
+export const HouseholdCard = ({ householdName, numberOfMembers, householdId }) => {
   const navigation = useNavigation();
-
   return (
-    <Pressable
-      style={styles.cardContainer}
-      onPress={() =>
-        navigation.navigate("SelectedHousehold", {
-          householdName: householdName,
-          householdId: householdId,
-        })
-      }
-    >
-      <View>
-        <View style={styles.householdNameContainer}>
-          <Entypo name="home" size={32} color="#ffffff" />
+    <Pressable style={styles.cardContainer} onPress={() =>
+    navigation.navigate("SelectedHousehold", {
+        householdName: householdName,
+        householdId: householdId,})}>
+      <View style={styles.cardContent}>
+        <Entypo name="home" size={32} color="#FF4C4C" />
+        <View style={styles.textContainer}>
           <Text style={styles.householdName}>{householdName}</Text>
-        </View>
-        <View style={styles.householdInformation}>
-          <FontAwesome name="users" size={16} color="#ffffff" />
-          <Text style={styles.numberOfMembers}>{numberOfMembers}</Text>
+          <Text style={styles.memberCount}>{numberOfMembers} Members</Text>
         </View>
       </View>
     </Pressable>
@@ -36,48 +22,33 @@ export const HouseholdCard = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  cardContainer: {
+    backgroundColor: "#F8F9FA",
+    borderRadius: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    marginVertical: 10,
+    marginHorizontal: 16,
+    padding: 20,
+  },
+  cardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  textContainer: {
     flex: 1,
   },
-
-  cardContainer: {
-    backgroundColor: "#EF2A39",
-    marginVertical: 20,
-    marginHorizontal: 10,
-    borderRadius: 12,
-    shadowColor: "#868686",
-    shadowOffset: { width: -3, height: 8 },
-    shadowOpacity: 0.9,
-    shadowRadius: 4,
-    width: 250,
-  },
-
-  householdNameContainer: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "flex-start",
-    margin: 5,
-  },
-
   householdName: {
-    fontSize: 24,
-    fontWeight: "700",
-    padding: 5,
-    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333333",
   },
-
-  householdInformation: {
-    display: "flex",
-    flexDirection: "row",
-    textAlign: "flex-start",
-    marginHorizontal: 10,
-  },
-
-  numberOfMembers: {
+  memberCount: {
     fontSize: 14,
-    color: "#ffffff",
-    fontWeight: "700",
-    marginLeft: 8,
+    color: "#555555",
+    marginTop: 4,
   },
 });
