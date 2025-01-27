@@ -33,7 +33,8 @@ class ShoppingList {
                 const shoppingLists = snapshot.docs.map(doc => new ShoppingList(householdId, doc.data().category, doc.data().name, doc.id));
                 return shoppingLists;
             } else {
-                throw new Error('No shopping lists found');
+                // throw new Error('No shopping lists found');
+                return [];
             }
         } catch (error) {
             console.error('Error getting shopping lists:', error);

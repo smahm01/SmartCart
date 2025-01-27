@@ -18,8 +18,8 @@ class RequestedItem {
     itemRequester,
     name,
     brand,
-    categories,
-    allergens,
+    categories = [],
+    allergens = [],
     quantityRequested,
     requestFullfilled,
     dateRequested,
@@ -56,13 +56,15 @@ class RequestedItem {
         const requestedItem = new RequestedItem(
           householdId,
           shoppingListId,
-          snapshot.data().category,
-          snapshot.data().dateRequested,
           snapshot.data().itemRequester,
-          snapshot.data().location,
           snapshot.data().name,
+          snapshot.data().brand,  
+          snapshot.data().categories,
+          snapshot.data().allergens,
           snapshot.data().quantityRequested,
           snapshot.data().requestFullfilled,
+          snapshot.data().dateRequested,
+          snapshot.data().productUpc,
           snapshot.id
         );
         return requestedItem;
@@ -92,14 +94,16 @@ class RequestedItem {
             new RequestedItem(
               householdId,
               shoppingListId,
-              doc.data().category,
-              doc.data().dateRequested,
-              doc.data().itemRequester,
-              doc.data().location,
-              doc.data().name,
-              doc.data().quantityRequested,
-              doc.data().requestFullfilled,
-              doc.id
+              snapshot.data().itemRequester,
+              snapshot.data().name,
+              snapshot.data().brand,  
+              snapshot.data().categories,
+              snapshot.data().allergens,
+              snapshot.data().quantityRequested,
+              snapshot.data().requestFullfilled,
+              snapshot.data().dateRequested,
+              snapshot.data().productUpc,
+              snapshot.id
             )
         );
         return requestedItems;
@@ -165,10 +169,9 @@ class RequestedItem {
         {
           householdId: householdId,
           shoppingListId: shoppingListId,
-          category: requestedItem.category,
+          categories: requestedItem.categories,
           dateRequested: requestedItem.dateRequested,
           itemRequester: requestedItem.itemRequester,
-          location: requestedItem.location,
           name: requestedItem.name,
           quantityRequested: requestedItem.quantityRequested,
           requestFullfilled: requestedItem.requestFullfilled,
