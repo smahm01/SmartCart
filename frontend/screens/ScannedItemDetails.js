@@ -44,6 +44,7 @@ export const ScannedItemDetails = ({ route }) => {
 
   const getItemDetails = async () => {
     try {
+      console.log("Fetching product details for UPC:", upc);
       const response = await axios.get(
         `https://world.openfoodfacts.net/api/v2/product/${upc}?fields=product_name,nutriscore_data,nutriments,nutrition_grades,brands,categories,allergens`,
         {

@@ -47,7 +47,11 @@ export const ShoppingListContent = ({ route }) => {
                     <AddButton 
                     size={28}
                     color={"#EF2A39"} 
-                    // onPress={() => navigation.navigate("ScanItem")}
+                    onPress={() => navigation.navigate("AddItemShoppingList", {
+                        shoppingListName,
+                        shoppingListId,
+                        shoppingListCategory
+                    })}
                     />
                 </View>
                 

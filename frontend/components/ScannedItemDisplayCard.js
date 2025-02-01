@@ -53,6 +53,7 @@ export const ScannedItemDisplayCard = ({
     if (categories === "Unknown") {
       return <Text style={styles.highlightedText}>N/A</Text>;
     } else {
+      const categoriesArray = Array.isArray(categories) ? categories : [categories];
       return categories.map((category, index) => {
         const randomColor = vibrantColors[index % vibrantColors.length];
         return (
