@@ -104,6 +104,7 @@ const styles = StyleSheet.create({
     textAlign: "left",
     marginTop: 20,
     marginBottom: 10,
+    marginLeft: 20,
     textShadowColor: "rgba(0, 0, 0, 0.1)", // Subtle shadow
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,

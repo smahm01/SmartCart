@@ -14,7 +14,7 @@ export const HouseholdCard = ({ householdName, numberOfMembers, householdId }) =
         <Entypo name="home" size={32} color="#FF4C4C" />
         <View style={styles.textContainer}>
           <Text style={styles.householdName}>{householdName}</Text>
-          <Text style={styles.memberCount}>{numberOfMembers} Members</Text>
+          <Text style={styles.memberCount}>{numberOfMembers + (numberOfMembers === 1 ? ' Member' : ' Members')}</Text>
         </View>
       </View>
     </Pressable>
@@ -40,6 +40,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
+    marginLeft: 10,
   },
   householdName: {
     fontSize: 18,

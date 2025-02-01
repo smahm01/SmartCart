@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { ShoppingList } from "../screens/ShoppingList";
+import { ShoppingListStack } from "./ShoppingListStack";
 import { Ionicons } from "@expo/vector-icons";
 import { Text, StyleSheet } from "react-native";
 import { Pantry } from "../screens/Pantry";
@@ -65,7 +65,7 @@ export const SelectedHousehold = ({ route }) => {
       >
         <Tab.Screen
           name="Lists"
-          component={ShoppingList}
+          component={ShoppingListStack}
           initialParams={{
             householdId: householdId,
             householdName: householdName,
