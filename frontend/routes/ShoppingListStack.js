@@ -2,7 +2,9 @@ import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { ShoppingList } from "../screens/ShoppingList";
 import { ShoppingListContent } from "../screens/ShoppingListContent";
-// import { ScanItem } from "../screens/ScanItem";
+import { AddItemShoppingList } from "../screens/AddItemShoppingList";
+import { AddCustomItemShoppingList } from "../screens/AddCustomItemShoppingList";
+import { ScanItem } from "../screens/ScanItem";
 
 const Stack = createStackNavigator();
 
@@ -26,10 +28,28 @@ export const ShoppingListStack = ({ route }) => {
                     shoppingListCategory: shoppingListCategory
                 }}
             />
-            {/* <Stack.Screen
+            <Stack.Screen 
+                name="AddItemShoppingList"
+                component={AddItemShoppingList}
+                initialParams={{
+                    shoppingListName: shoppingListName,
+                    shoppingListId: shoppingListId,
+                    shoppingListCategory: shoppingListCategory
+                }}
+            />
+            <Stack.Screen 
+                name="AddCustomItemShoppingList"
+                component={AddCustomItemShoppingList}
+                initialParams={{
+                    shoppingListName: shoppingListName,
+                    shoppingListId: shoppingListId,
+                    shoppingListCategory: shoppingListCategory
+                }}
+            />
+            <Stack.Screen
                 name="ScanItem"
                 component={ScanItem}
-            /> */}
+            />
         </Stack.Navigator>
     );
 };
