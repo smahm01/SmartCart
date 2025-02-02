@@ -7,6 +7,7 @@ import { collection, onSnapshot, query } from "firebase/firestore";
 import { firestore } from "../firebase/config";
 import { useNavigation } from "@react-navigation/native";
 import { AddButton } from '../components/AddButton';
+import { SearchButton } from '../components/SearchButton';
 
 export const ShoppingListContent = ({ route }) => {
     const { householdId } = useContext(HouseholdContext);
@@ -46,7 +47,17 @@ export const ShoppingListContent = ({ route }) => {
                 <View style={styles.addButtonContainer}>
                     <AddButton 
                     size={28}
-                    color={"#EF2A39"} 
+                    color={"#EF2A39"}
+                    onPress={() => navigation.navigate("AddCustomItemShoppingList", {
+                        shoppingListName,
+                        shoppingListId,
+                        shoppingListCategory
+                    })}
+                    />
+                    <SearchButton
+                    style={styles.searchButton} 
+                    size = {28}
+                    color = {"#EF2A39"}
                     onPress={() => navigation.navigate("AddItemShoppingList", {
                         shoppingListName,
                         shoppingListId,
@@ -126,7 +137,11 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     addButtonContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
         position: "absolute",
         right: 5,
+        paddingHorizontal: 10,
+        width: 100,
     },
 });

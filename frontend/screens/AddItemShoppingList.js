@@ -1,21 +1,37 @@
-import React, { useState } from "react";
-import { Modal, View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import React, { useState, useContext } from "react";
+import { Modal, View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import axios from "axios";
 import { ScannedItemDisplayCard } from "../components/ScannedItemDisplayCard";
 import { useNavigation } from "@react-navigation/native";
+import { HouseholdContext } from "../context/HouseholdContext";
 import { BackButton } from "../components/BackButton";
+import { RequestedItem } from "../firebase/models/RequestedItem";
+import { auth } from "../firebase/config";
+
 
 
 export const AddItemShoppingList = ({ route }) => {
     const { shoppingListName, shoppingListId, shoppingListCategory } = route.params;
+    const { householdId } = useContext(HouseholdContext);
     const [itemName, setItemName] = useState("");
     const [products, setProducts] = useState([]);
+    const [quantities, setQuantities] = useState({});
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
     const navigation = useNavigation();
 
 
     const handleSearch = () => {
+        setIsSearching(true);
         getItemDetails();
     }
+
+    const handleQuantityChange = (productId, value) => {
+        setQuantities({
+          ...quantities,
+          [productId]: parseInt(value) || 1
+        });
+      };
 
     const getItemDetails = async () => {
         try {
@@ -42,6 +58,11 @@ export const AddItemShoppingList = ({ route }) => {
                 console.log('id: ' + products[i].id);
                 console.log('product name: ' + products[i].product_name);
                 console.log('brand name: ' + products[i].brands);
+                //brands is a string of words separated by commas, take only the first word
+                //if brands is not undefined
+                if (products[i].brands !== undefined) {
+                    products[i].brands = products[i].brands.split(',')[0];
+                }
                 console.log('categories: ' + products[i].categories);
                 //categories is a string of words separated by commas, turn it into a array
                 products[i].categories = products[i].categories.split(',');
@@ -59,12 +80,35 @@ export const AddItemShoppingList = ({ route }) => {
 
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsSearching(false);
         }
     }
 
     const handleAddToList = (product) => {
-        
-      };
+        const quantity = quantities[product.id] || 1;
+        const requestedItem = new RequestedItem(
+            householdId, 
+            shoppingListId,
+            auth.currentUser.uid, 
+            product.product_name, 
+            product.brands,
+            product.categories,
+            product.allergens,
+            quantity,
+            false,
+            new Date(),
+            product.id
+        );
+
+        RequestedItem.createRequestedItem(householdId, shoppingListId, requestedItem).then(() => {
+            setShowSuccessModal(true);
+            setTimeout(() => {
+                setShowSuccessModal(false);
+            }, 2000)
+        })
+
+    };
     
       return (
         <View style={styles.container}>
@@ -88,7 +132,12 @@ export const AddItemShoppingList = ({ route }) => {
           </View>
       
           {/* Product List */}
-          {products.length > 0 ? (
+          {isSearching ? ( // Show "Searching..." while loading
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#007bff" />
+                    <Text style={styles.loadingText}>Searching...</Text>
+                </View>
+            ) : products.length > 0 ? (
             <FlatList
               data={products}
               keyExtractor={(item) => item.id}
@@ -105,12 +154,21 @@ export const AddItemShoppingList = ({ route }) => {
                     calories={item.nutriments["energy-kcal_100g"]}
                     productImageUrl={item.image_url}
                   />
-                  <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => handleAddToList(item)}
-                  >
-                    <Text style={styles.addButtonText}>Add to List</Text>
-                  </TouchableOpacity>
+                   <View style={styles.quantityContainer}>
+                <TextInput
+                  style={styles.quantityInput}
+                  keyboardType="numeric"
+                  placeholder="Qty"
+                  value={quantities[item.id] ? quantities[item.id].toString() : '1'}
+                  onChangeText={(value) => handleQuantityChange(item.id, value)}
+                />
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={() => handleAddToList(item)}
+                >
+                  <Text style={styles.addButtonText}>Add to List</Text>
+                </TouchableOpacity>
+              </View>
                 </View>
               )}
               contentContainerStyle={styles.flatListContent}
@@ -120,6 +178,19 @@ export const AddItemShoppingList = ({ route }) => {
               <Text style={styles.noResultsText}>No products found.</Text>
             </View>
           )}
+
+          {/* Success Modal */}
+          <Modal
+            transparent={true}
+            visible={showSuccessModal}
+            onRequestClose={() => setShowSuccessModal(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalText}>Item added successfully!</Text>
+              </View>
+            </View>
+          </Modal>
         </View>
       );
     };
@@ -181,6 +252,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 10,
+        width: 150,
+        height: 40,
       },
       addButtonText: {
         color: '#fff',
@@ -199,5 +272,46 @@ const styles = StyleSheet.create({
       flatListContent: {
         paddingBottom: 20,
       },
+      quantityContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 10,
+      },
+      quantityInput: {
+        width: 50,
+        height: 40,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        marginRight: 10,
+        textAlign: 'center',
+        
+      },
+      modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        padding: 20,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    modalText: {
+        fontSize: 18,
+        color: '#28a745',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    loadingText: {
+        fontSize: 18,
+        color: "#007bff",
+        marginTop: 10,
+    },
 });
 
