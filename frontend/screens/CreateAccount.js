@@ -92,7 +92,7 @@ export const CreateAccount = ({ navigation }) => {
           setPhoneNumberValidationText("");
         } else {
           setPhoneNumberValidated(false);
-          setPhoneNumberValidationText("Format XXX-XXX-XXXX expected");
+          setPhoneNumberValidationText("Number must be 10 digits long");
         }
       }
     }
