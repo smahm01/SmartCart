@@ -24,11 +24,16 @@ export const ScannedItemDetails = ({ route }) => {
   const [selectedList, setSelectedList] = useState("");
   const [selectedQuantity, setSelectedQuantity] = useState("");
   const [householdShoppingLists, setHouseholdShoppingLists] = useState([]);
+  const [itemAlreadyInList, setItemAlreadyInList] = useState(false);
   const { upc } = route.params;
   const { householdId } = useContext(HouseholdContext);
 
   const showSuccessToast = (message) => {
     Toast.success(message);
+  };
+
+  const showErrorToast = (message) => {
+    Toast.error(message);
   };
 
   const fetchHouseholdShoppingLists = async () => {
@@ -49,7 +54,8 @@ export const ScannedItemDetails = ({ route }) => {
         `https://world.openfoodfacts.net/api/v2/product/${upc}?fields=product_name,nutriscore_data,nutriments,nutrition_grades,brands,categories,allergens`,
         {
           headers: {
-            "User-Agent": "SmartCart/dev_version (sadek.mahmood@mail.mcgill.ca) ",
+            "User-Agent":
+              "SmartCart/dev_version (sadek.mahmood@mail.mcgill.ca) ",
           },
         }
       );
@@ -62,28 +68,40 @@ export const ScannedItemDetails = ({ route }) => {
           product_name: data.product_name || "Unknown",
           product_brand: data.brands || "Unknown",
           categories:
-            data.categories !== ""
+            data.categories && data.categories !== ""
               ? data.categories
                   .split(",")
                   .map((a) => a.trim())
                   .slice(0, 3)
               : "Unknown",
           allergens:
-            data.allergens !== ""
+            data.allergens && data.allergens !== ""
               ? data.allergens
                   .replaceAll("en:", "")
                   .split(",")
                   .map((a) => a.trim())
               : "Unknown",
-          protein_per_100g: data.nutriments.proteins_100g || "Unknown",
-          fat_per_100g: data.nutriments.fat_100g || "Unknown",
-          carb_per_100g: data.nutriments.carbohydrates_100g || "Unknown",
-          cal_per_100g: data.nutriments?.["energy-kcal_100g"] || "Unknown",
+          protein_per_100g:
+            data.nutriments && data.nutriments.proteins_100g
+              ? data.nutriments.proteins_100g
+              : "Unknown",
+          fat_per_100g:
+            data.nutriments && data.nutriments.fat_100g
+              ? data.nutriments.fat_100g
+              : "Unknown",
+          carb_per_100g:
+            data.nutriments && data.nutriments.carbohydrates_100g
+              ? data.nutriments.carbohydrates_100g
+              : "Unknown",
+          cal_per_100g:
+            data.nutriments && data.nutriments?.["energy-kcal_100g"]
+              ? data.nutriments?.["energy-kcal_100g"]
+              : "Unknown",
         });
       }
     } catch (err) {
       setError(true);
-      console.error("Error fetching product details:", err);
+      console.log("Error fetching product details:", err);
     } finally {
       setLoading(false);
     }
@@ -91,6 +109,20 @@ export const ScannedItemDetails = ({ route }) => {
 
   const handleAddItemToList = async () => {
     try {
+      // Check if item is already in the list
+      const itemsAlreadyInList = await RequestedItem.getRequestedItems(
+        householdId,
+        selectedList
+      );
+
+      if (itemsAlreadyInList.length === 0) {
+        setItemAlreadyInList(false);
+      } else if (itemsAlreadyInList.some((item) => item.productUpc === upc)) {
+        setItemAlreadyInList(true);
+        showErrorToast("Item already in list");
+        return;
+      }
+
       // Create requested item object
       const requestedItem = new RequestedItem(
         householdId,
@@ -112,10 +144,10 @@ export const ScannedItemDetails = ({ route }) => {
         selectedList,
         requestedItem
       );
+      showSuccessToast("Item added to shopping list");
     } catch (error) {
       console.error("Error adding item to list:", error);
     } finally {
-      showSuccessToast("Item added to shopping list");
     }
   };
 
@@ -245,7 +277,7 @@ export const ScannedItemDetails = ({ route }) => {
         )}
         <ToastManager
           position={"top"}
-          positionValue={-440}
+          positionValue={-400}
           animationStyle={"upInUpOut"}
           showProgressBar={false}
           showCloseIcon={false}
@@ -256,7 +288,7 @@ export const ScannedItemDetails = ({ route }) => {
           }}
           style={{
             borderRadius: 20,
-            backgroundColor: "#46A24A",
+            backgroundColor: itemAlreadyInList ? "#EF2A39" : "#4CAF50",
           }}
         />
       </View>
@@ -312,19 +344,18 @@ const styles = StyleSheet.create({
 
   selectListTitle: {
     fontSize: 18,
-    marginHorizontal: 15,
+    marginHorizontal: 8,
     marginVertical: 10,
     fontWeight: "bold",
   },
 
   selectList: {
-    width: "100%",
     marginBottom: 10,
   },
 
   selectBox: {
     borderRadius: 8,
-    marginHorizontal: 15,
+    marginHorizontal: 7,
   },
 
   dropdownOverlay: {
@@ -360,7 +391,6 @@ const styles = StyleSheet.create({
 
   selectListContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
 });

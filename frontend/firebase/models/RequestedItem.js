@@ -58,7 +58,7 @@ class RequestedItem {
           shoppingListId,
           snapshot.data().itemRequester,
           snapshot.data().name,
-          snapshot.data().brand,  
+          snapshot.data().brand,
           snapshot.data().categories,
           snapshot.data().allergens,
           snapshot.data().quantityRequested,
@@ -94,24 +94,24 @@ class RequestedItem {
             new RequestedItem(
               householdId,
               shoppingListId,
-              snapshot.data().itemRequester,
-              snapshot.data().name,
-              snapshot.data().brand,  
-              snapshot.data().categories,
-              snapshot.data().allergens,
-              snapshot.data().quantityRequested,
-              snapshot.data().requestFullfilled,
-              snapshot.data().dateRequested,
-              snapshot.data().productUpc,
-              snapshot.id
+              doc.data().itemRequester,
+              doc.data().name,
+              doc.data().brand,
+              doc.data().categories,
+              doc.data().allergens,
+              doc.data().quantityRequested,
+              doc.data().requestFullfilled,
+              doc.data().dateRequested,
+              doc.data().productUpc,
+              doc.id
             )
         );
         return requestedItems;
       } else {
-        throw new Error("No requested items found");
+        return [];
       }
     } catch (error) {
-      console.error("Error getting requested items:", error);
+      console.log("Error getting requested items:", error);
       throw error;
     }
   }

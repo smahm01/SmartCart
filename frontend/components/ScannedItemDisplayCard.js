@@ -53,7 +53,9 @@ export const ScannedItemDisplayCard = ({
     if (categories === "Unknown") {
       return <Text style={styles.highlightedText}>N/A</Text>;
     } else {
-      const categoriesArray = Array.isArray(categories) ? categories : [categories];
+      const categoriesArray = Array.isArray(categories)
+        ? categories
+        : [categories];
       return categories.map((category, index) => {
         const randomColor = vibrantColors[index % vibrantColors.length];
         return (
@@ -78,6 +80,15 @@ export const ScannedItemDisplayCard = ({
 
         <View style={styles.nutritionContainer}>
           <Text style={styles.specialTitle}>Nutrition Facts (Per 100g):</Text>
+
+          {protein === "Unknown" &&
+          fat === "Unknown" &&
+          carbs === "Unknown" &&
+          calories === "Unknown" ? (
+            <View style={styles.nutritionRow}>
+              <Text style={styles.highlightedText}>N/A</Text>
+            </View>
+          ) : null}
 
           {protein !== "Unknown" && (
             <View style={styles.nutritionRow}>
