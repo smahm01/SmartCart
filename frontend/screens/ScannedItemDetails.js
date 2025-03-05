@@ -234,7 +234,7 @@ export const ScannedItemDetails = ({ route }) => {
             selectedText="items selected"
             style={styles.selectList}
             boxStyles={{
-              ...styles.selectBox,
+              ...styles.selectBoxList,
               backgroundColor:
                 selectedList !== ""
                   ? "rgba(0, 255, 0, 0.3)"
@@ -242,21 +242,19 @@ export const ScannedItemDetails = ({ route }) => {
               borderColor: selectedList !== "" ? "green" : "red",
               borderWidth: 2,
             }}
-            dropdownStyles={styles.dropdownOverlay}
+            dropdownStyles={styles.dropdownOverlayLists}
           />
           <SelectList
             setSelected={setSelectedQuantity}
             data={["1", "2", "3", "4+"]}
             save="value"
-            placeholder={
-              selectedQuantity !== "" ? selectedQuantity : "Quantity"
-            }
+            placeholder={selectedQuantity !== "" ? selectedQuantity : "Qty"}
             search={false}
             searchPlaceholder="Search Shopping Lists"
             selectedText="items selected"
             style={styles.selectList}
             boxStyles={{
-              ...styles.selectBox,
+              ...styles.selectBoxQty,
               backgroundColor:
                 selectedQuantity !== ""
                   ? "rgba(0, 255, 0, 0.3)"
@@ -264,7 +262,7 @@ export const ScannedItemDetails = ({ route }) => {
               borderColor: selectedQuantity !== "" ? "green" : "red",
               borderWidth: 2,
             }}
-            dropdownStyles={styles.dropdownOverlay}
+            dropdownStyles={styles.dropdownOverlayQty}
           />
           {selectedList !== "" && selectedQuantity !== "" && (
             <View style={styles.confirmationContainer}>
@@ -275,7 +273,7 @@ export const ScannedItemDetails = ({ route }) => {
                   { opacity: pressed ? 0.7 : 1 },
                 ]}
               >
-                <Text style={styles.confirmButtonText}>Confirm</Text>
+                <Text style={styles.confirmButtonText}>Add</Text>
               </Pressable>
             </View>
           )}
@@ -367,20 +365,40 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  selectBox: {
+  selectBoxList: {
     borderRadius: 8,
-    marginHorizontal: 7,
+    marginHorizontal: 5,
+    width: 225,
   },
 
-  dropdownOverlay: {
+  selectBoxQty: {
+    borderRadius: 8,
+    marginHorizontal: 5,
+    width: 75,
+  },
+
+  dropdownOverlayLists: {
     position: "absolute",
-    top: 45,
-    right: 20,
+    top: 38,
+    right: 5,
     zIndex: 10,
     borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
     backgroundColor: "#fff",
+    width: 225,
+  },
+
+  dropdownOverlayQty: {
+    position: "absolute",
+    top: 38,
+    right: 5,
+    zIndex: 10,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    width: 75,
   },
 
   confirmationContainer: {
@@ -391,7 +409,7 @@ const styles = StyleSheet.create({
   confirmButton: {
     backgroundColor: "#4CAF50",
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     borderRadius: 20,
     marginRight: 20,
   },
