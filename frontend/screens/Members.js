@@ -1,14 +1,30 @@
 import React, { useEffect, useState, useContext } from "react";
-import {Text, View, StyleSheet, Button, Pressable, ActionSheetIOS} from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  Button,
+  Pressable,
+  ActionSheetIOS,
+} from "react-native";
 import { MembersPageNavigatioButtons } from "../components/MembersPageNavigatioButtons";
 import { InviteNewMemberSearchBar } from "../components/InviteNewMemberSearchBar";
-import { HouseholdContext } from '../context/HouseholdContext';
+import { HouseholdContext } from "../context/HouseholdContext";
 import { auth } from "../firebase/config";
-import { User } from '../firebase/models/Users'; // Adjust the import based on your project structure
-import { Household } from '../firebase/models/Household';
-import {getDoc, getFirestore, doc, updateDoc} from 'firebase/firestore';
-import {UserCard} from "../components/UserCard.js";
-
+import { User } from "../firebase/models/Users"; // Adjust the import based on your project structure
+import { Household } from "../firebase/models/Household";
+import {
+  getDoc,
+  getFirestore,
+  doc,
+  updateDoc,
+  query,
+  onSnapshot,
+  collection,
+  where,
+  documentId,
+} from "firebase/firestore";
+import { UserCard } from "../components/UserCard.js";
 
 export const Members = () => {
   const [selectedOption, setSelectedOption] = useState("Members");
@@ -18,11 +34,11 @@ export const Members = () => {
   const [admins, setAdmins] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
+  const currentUser = auth.currentUser;
 
   const fetchData = async () => {
     try {
       const uid = auth.currentUser.uid;
-      const user = await User.getUser(uid);
       const household = await Household.getHousehold(householdId);
 
       const adminsPromises = household.admins.map(async (userRef) => {
@@ -35,7 +51,7 @@ export const Members = () => {
       setAdmins(adminsData);
 
       // Check if the current user is an admin
-      const isAdmin = adminsData.some(admin => admin.uid === uid);
+      const isAdmin = adminsData.some((admin) => admin.uid === uid);
       setIsAdmin(isAdmin);
 
       const peoplePromises = household.people.map(async (userRef) => {
@@ -46,17 +62,35 @@ export const Members = () => {
       const peopleData = await Promise.all(peoplePromises);
 
       // Filter out admin users based on users inside of peopleData but not in adminsData
-      const nonAdminPeople = peopleData.filter(person => !adminsData.some(admin => admin.uid === person.uid));
-      
+      const nonAdminPeople = peopleData.filter(
+        (person) => !adminsData.some((admin) => admin.uid === person.uid)
+      );
+
       setPeople(nonAdminPeople);
     } catch (error) {
       console.error("Error fetching data: ", error);
     }
   };
 
+  // Run to load data every time householdId changes
   useEffect(() => {
+    console.log("Fetching data...");
     fetchData();
   }, [householdId]);
+
+  // Run every time admins or people array changes for the household
+  useEffect(() => {
+    const db = getFirestore();
+    const householdsCollection = collection(db, "households");
+    const q = query(
+      householdsCollection,
+      where(documentId(), "==", householdId)
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      fetchData();
+    });
+    return () => unsubscribe();
+  }, [currentUser]);
 
   const handleMakeAdmin = async (person) => {
     try {
@@ -67,15 +101,12 @@ export const Members = () => {
       const userRef = doc(db, `users/${person.uid}`);
       household.admins.push(userRef);
       await Household.updateHousehold(householdId, household);
-
-      // Refresh data
-      fetchData();
     } catch (error) {
       console.error("Error making admin: ", error);
     }
   };
 
-   const handleKickFromHousehold = async (person) => {
+  const handleKickFromHousehold = async (person) => {
     try {
       const db = getFirestore();
       const householdDocRef = doc(db, `households/${householdId}`);
@@ -91,18 +122,19 @@ export const Members = () => {
       await updateDoc(householdDocRef, {
         people: updatedPeople,
       });
+
       console.log(`${person.name} has been removed from the household.`);
     } catch (error) {
       console.error("Error removing member from household:", error);
     }
   };
 
-   const handlePress = (person) => {
-     if (!isAdmin) {
-       console.log("Only admins can perform actions on members");
-       return;
-     }
-     setSelectedMember(person.uid);
+  const handlePress = (person) => {
+    if (!isAdmin) {
+      console.log("Only admins can perform actions on members");
+      return;
+    }
+    setSelectedMember(person.uid);
     ActionSheetIOS.showActionSheetWithOptions(
       {
         options: ["Cancel", "Make Admin", "Kick from Household"],
@@ -128,26 +160,45 @@ export const Members = () => {
         selectedOption={selectedOption}
       />
 
-      {selectedOption === "Invite" ? (
+      {selectedOption === "Invite" && isAdmin ? (
         <View>
           <InviteNewMemberSearchBar />
+        </View>
+      ) : selectedOption === "Invite" && !isAdmin ? (
+        <View
+          style={{
+            display: "1",
+          }}
+        >
+          <Text
+            style={{
+              marginTop: 200,
+              marginHorizontal: 20,
+              color: "red",
+              fontWeight: "bold",
+              textAlign: "center",
+              fontSize: 20,
+            }}
+          >
+            Only admins can invite new members to the household.
+          </Text>
         </View>
       ) : selectedOption === "Admins" ? (
         <View>
           {admins.map((admin, index) => (
-              <UserCard key={index} name={admin.name} />
+            <UserCard key={index} name={admin.name} />
           ))}
         </View>
       ) : (
-          <View>
-            {people.map((person, index) => (
-                <UserCard key={index}
-                          name={person.name}
-                          onPress={()=> handlePress(person)}
-                >
-                </UserCard>
-            ))}
-          </View>
+        <View>
+          {people.map((person, index) => (
+            <UserCard
+              key={index}
+              name={person.name}
+              onPress={() => handlePress(person)}
+            ></UserCard>
+          ))}
+        </View>
       )}
     </View>
   );
