@@ -216,82 +216,96 @@ export const ScannedItemDetails = ({ route }) => {
         calories={itemDetails.cal_per_100g}
         productImageUrl={itemDetails}
       />
+
       <Text style={styles.selectListTitle}>
         Select Shopping List and Quantity
       </Text>
-      <View style={styles.selectListContainer}>
-        <SelectList
-          setSelected={setSelectedList}
-          data={formattedShoppingLists}
-          save="key"
-          placeholder={
-            selectedList !== "" ? selectedList : "Select a Shopping List"
-          }
-          search={false}
-          searchPlaceholder="Search Shopping Lists"
-          selectedText="items selected"
-          style={styles.selectList}
-          boxStyles={{
-            ...styles.selectBox,
-            backgroundColor:
-              selectedList !== ""
-                ? "rgba(0, 255, 0, 0.3)"
-                : "rgba(255, 0, 0, 0.3)",
-            borderColor: selectedList !== "" ? "green" : "red",
-            borderWidth: 2,
-          }}
-          dropdownStyles={styles.dropdownOverlay}
-        />
-        <SelectList
-          setSelected={setSelectedQuantity}
-          data={["1", "2", "3", "4+"]}
-          save="value"
-          placeholder={selectedQuantity !== "" ? selectedQuantity : "Quantity"}
-          search={false}
-          searchPlaceholder="Search Shopping Lists"
-          selectedText="items selected"
-          style={styles.selectList}
-          boxStyles={{
-            ...styles.selectBox,
-            backgroundColor:
-              selectedQuantity !== ""
-                ? "rgba(0, 255, 0, 0.3)"
-                : "rgba(255, 0, 0, 0.3)",
-            borderColor: selectedQuantity !== "" ? "green" : "red",
-            borderWidth: 2,
-          }}
-          dropdownStyles={styles.dropdownOverlay}
-        />
-        {selectedList !== "" && selectedQuantity !== "" && (
-          <View style={styles.confirmationContainer}>
-            <Pressable
-              onPress={handleAddItemToList}
-              style={({ pressed }) => [
-                styles.confirmButton,
-                { opacity: pressed ? 0.7 : 1 },
-              ]}
-            >
-              <Text style={styles.confirmButtonText}>Confirm</Text>
-            </Pressable>
-          </View>
-        )}
-        <ToastManager
-          position={"top"}
-          positionValue={-400}
-          animationStyle={"upInUpOut"}
-          showProgressBar={false}
-          showCloseIcon={false}
-          textStyle={{
-            fontSize: 14,
-            color: "#ffffff",
-            fontWeight: "bold",
-          }}
-          style={{
-            borderRadius: 20,
-            backgroundColor: itemAlreadyInList ? "#EF2A39" : "#4CAF50",
-          }}
-        />
-      </View>
+      {formattedShoppingLists.length != 0 ? (
+        <View style={styles.selectListContainer}>
+          <SelectList
+            setSelected={setSelectedList}
+            data={formattedShoppingLists}
+            save="key"
+            placeholder={
+              selectedList !== "" ? selectedList : "Select a Shopping List"
+            }
+            search={false}
+            searchPlaceholder="Search Shopping Lists"
+            selectedText="items selected"
+            style={styles.selectList}
+            boxStyles={{
+              ...styles.selectBox,
+              backgroundColor:
+                selectedList !== ""
+                  ? "rgba(0, 255, 0, 0.3)"
+                  : "rgba(255, 0, 0, 0.3)",
+              borderColor: selectedList !== "" ? "green" : "red",
+              borderWidth: 2,
+            }}
+            dropdownStyles={styles.dropdownOverlay}
+          />
+          <SelectList
+            setSelected={setSelectedQuantity}
+            data={["1", "2", "3", "4+"]}
+            save="value"
+            placeholder={
+              selectedQuantity !== "" ? selectedQuantity : "Quantity"
+            }
+            search={false}
+            searchPlaceholder="Search Shopping Lists"
+            selectedText="items selected"
+            style={styles.selectList}
+            boxStyles={{
+              ...styles.selectBox,
+              backgroundColor:
+                selectedQuantity !== ""
+                  ? "rgba(0, 255, 0, 0.3)"
+                  : "rgba(255, 0, 0, 0.3)",
+              borderColor: selectedQuantity !== "" ? "green" : "red",
+              borderWidth: 2,
+            }}
+            dropdownStyles={styles.dropdownOverlay}
+          />
+          {selectedList !== "" && selectedQuantity !== "" && (
+            <View style={styles.confirmationContainer}>
+              <Pressable
+                onPress={handleAddItemToList}
+                style={({ pressed }) => [
+                  styles.confirmButton,
+                  { opacity: pressed ? 0.7 : 1 },
+                ]}
+              >
+                <Text style={styles.confirmButtonText}>Confirm</Text>
+              </Pressable>
+            </View>
+          )}
+          <ToastManager
+            position={"top"}
+            positionValue={-400}
+            animationStyle={"upInUpOut"}
+            showProgressBar={false}
+            showCloseIcon={false}
+            textStyle={{
+              fontSize: 14,
+              color: "#ffffff",
+              fontWeight: "bold",
+            }}
+            style={{
+              borderRadius: 20,
+              backgroundColor: itemAlreadyInList ? "#EF2A39" : "#4CAF50",
+            }}
+          />
+        </View>
+      ) : (
+        <View style={styles.noShoppingListContainer}>
+          <Text
+            style={{ fontSize: "16", fontWeight: "bold", textAlign: "center" }}
+          >
+            No Shopping lists exist. Please create one in order to begin adding
+            items!
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -392,5 +406,20 @@ const styles = StyleSheet.create({
   selectListContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
+  },
+
+  noShoppingListContainer: {
+    backgroundColor: "#FFEBEE",
+    borderRadius: 10,
+    padding: 20,
+    marginHorizontal: 20,
+    marginVertical: 5,
+    borderColor: "#EF2A39",
+    borderWidth: 2,
+    shadowColor: "#EF2A39",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
 });
