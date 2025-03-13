@@ -11,11 +11,12 @@ import {
 } from "firebase/firestore";
 
 class User {
-  constructor(name, email, phoneNumber, uid) {
+  constructor(name, email, phoneNumber, uid, dietaryRestrictions = []) {
     this.name = name;
     this.email = email;
     this.phoneNumber = phoneNumber;
     this.uid = uid;
+    this.dietaryRestrictions = dietaryRestrictions;
   }
 
   static async getUser(userId, db = getFirestore()) {
@@ -27,7 +28,8 @@ class User {
           snapshot.data().name,
           snapshot.data().email,
           snapshot.data().phoneNumber,
-          snapshot.id
+          snapshot.id,
+          snapshot.data().dietaryRestrictions || []
         );
         return user;
       } else {
@@ -50,7 +52,8 @@ class User {
               doc.data().name,
               doc.data().email,
               doc.data().phoneNumber,
-              doc.id
+              doc.id,
+              doc.data().dietaryRestrictions || []
             )
         );
         return users;
@@ -82,7 +85,8 @@ class User {
                 doc.data().name,
                 doc.data().email,
                 doc.data().phoneNumber,
-                doc.id
+                doc.id,
+                doc.data().dietaryRestrictions || []
               )
           );
         return users;
@@ -104,6 +108,7 @@ class User {
         email: user.email,
         phoneNumber: user.phoneNumber,
         uid: user.uid,
+        dietaryRestrictions: user.dietaryRestrictions
       });
       return {
         success: true,
@@ -122,6 +127,7 @@ class User {
         name: updatedUser.name,
         email: updatedUser.email,
         phoneNumber: updatedUser.phoneNumber,
+        dietaryRestrictions: updatedUser.dietaryRestrictions
       });
       return {
         success: true,
