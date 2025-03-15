@@ -10,7 +10,7 @@ import { ScanItem } from "../screens/ScanItem";
 const Stack = createStackNavigator();
 
 export const ShoppingListStack = ({ route }) => {
-    const { shoppingListName, shoppingListId, shoppingListCategory } = route.params;
+    const { shoppingListName, shoppingListId, shoppingListCategory, shoppingListItems } = route.params;
     return (
         <Stack.Navigator
             initialRouteName="ShoppingList"
@@ -57,7 +57,8 @@ export const ShoppingListStack = ({ route }) => {
                 initialParams={{
                     shoppingListName: shoppingListName,
                     shoppingListId: shoppingListId,
-                    shoppingListCategory: shoppingListCategory
+                    shoppingListCategory: shoppingListCategory,
+                    shoppingListItems: shoppingListItems
                 }}
             />
         </Stack.Navigator>

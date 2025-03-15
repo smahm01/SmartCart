@@ -11,7 +11,17 @@ import { SearchButton } from "../components/SearchButton";
 import { FindRecipesButton } from "../components/FindRecipesButton";
 
 export const RecipeSuggestions = ({ route }) => {
+    const { shoppingListName, shoppingListId, shoppingListCategory, shoppingListItems } = route.params;
 
+    return (
+        <View>
+            <Text>Recipe Suggestions</Text>
+            <Text>Shopping List Name: {shoppingListName}</Text>
+            <Text>Shopping List ID: {shoppingListId}</Text>
+            <Text>Shopping List Category: {shoppingListCategory}</Text>
+            <Text>Shopping List Length: {shoppingListItems.length}</Text>
+        </View>
+    );
 }
 
 

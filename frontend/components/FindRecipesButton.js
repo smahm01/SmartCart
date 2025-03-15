@@ -7,7 +7,8 @@ import { useNavigation } from '@react-navigation/native';
 export const FindRecipesButton = ({
     shoppingListName,
     shoppingListId,
-    shoppingListCategory
+    shoppingListCategory,
+    shoppingListItems
 }) => {
     const navigation = useNavigation();
 
@@ -19,7 +20,12 @@ export const FindRecipesButton = ({
             <FAB
                 style={styles.fab}
                 icon="chef-hat" // Use an appropriate icon
-                onPress={() => navigation.navigate('RecipeSuggestions')}
+                onPress={() => navigation.navigate('RecipeSuggestions', {
+                    shoppingListName,
+                    shoppingListId,
+                    shoppingListCategory,
+                    shoppingListItems
+                })}
             />
         </View>
     );

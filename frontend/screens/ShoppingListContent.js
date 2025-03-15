@@ -112,6 +112,7 @@ export const ShoppingListContent = ({ route }) => {
         shoppingListName={shoppingListName} 
         shoppingListId={shoppingListId} 
         shoppingListCategory={shoppingListCategory}
+        shoppingListItems={shoppingListItems}
       />
     </View>
   );
