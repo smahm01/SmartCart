@@ -8,6 +8,7 @@ import { firestore } from "../firebase/config";
 import { useNavigation } from "@react-navigation/native";
 import { AddButton } from "../components/AddButton";
 import { SearchButton } from "../components/SearchButton";
+import { FindRecipesButton } from "../components/FindRecipesButton";
 
 export const ShoppingListContent = ({ route }) => {
   const { householdId } = useContext(HouseholdContext);
@@ -83,7 +84,7 @@ export const ShoppingListContent = ({ route }) => {
       )}
 
       {/* FlatList of Shopping List Items */}
-      <View>
+      <View style={styles.flatListContainer}>
         {hasShoppingListItems ? (
           <FlatList
             data={shoppingListItems}
@@ -107,6 +108,11 @@ export const ShoppingListContent = ({ route }) => {
           </View>
         )}
       </View>
+      <FindRecipesButton 
+        shoppingListName={shoppingListName} 
+        shoppingListId={shoppingListId} 
+        shoppingListCategory={shoppingListCategory}
+      />
     </View>
   );
 };
@@ -115,6 +121,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "white",
+    position: "relative",
   },
   backContainer: {
     marginTop: 5,
