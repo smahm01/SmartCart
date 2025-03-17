@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, StyleSheet, ScrollView, Pressable, Image } from "react-native";
+import { Text, View, StyleSheet, ScrollView, Pressable, Image, Alert } from "react-native";
 import { auth } from "../firebase/config";
 import { User } from "../firebase/models/Users";
 import { TextInput } from "react-native-gesture-handler";
 import { FontAwesome } from "@expo/vector-icons";
+import { updateEmail } from "firebase/auth";
 
 const DIETARY_OPTIONS = [
   "Gluten-Free", "Lactose-Free", "Low-Sodium", "Low-FODMAP", "Diabetic-Friendly",
@@ -24,6 +25,10 @@ export const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [newRestriction, setNewRestriction] = useState("");
   const [dietaryRestrictions, setDietaryRestrictions] = useState([]);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPhone, setNewPhone] = useState("");
 
   useEffect(() => {
     fetchUserData();
@@ -34,10 +39,94 @@ export const Profile = () => {
       const currentUser = await User.getUser(auth.currentUser.uid);
       setUser(currentUser);
       setDietaryRestrictions(currentUser.dietaryRestrictions || []);
+      setNewEmail(currentUser.email || "");
+      setNewPhone(currentUser.phoneNumber || "");
     } catch (error) {
       console.error("Error fetching user data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateEmail = async () => {
+    if (newEmail === user.email) {
+      setIsEditingEmail(false);
+      return;
+    }
+
+    try {
+      // First update the email in Firestore
+      const updatedUser = {
+        ...user,
+        email: newEmail
+      };
+      await User.updateUser(user.uid, updatedUser);
+      
+      // Then update email in Firebase Auth
+      await updateEmail(auth.currentUser, newEmail);
+      
+      setUser(updatedUser);
+      setIsEditingEmail(false);
+      Alert.alert("Success", "Email updated successfully");
+    } catch (error) {
+      console.error("Error updating email:", error);
+      
+      // Handle specific Firebase Auth errors
+      if (error.code === 'auth/requires-recent-login') {
+        Alert.alert(
+          "Security Check Required",
+          "For security reasons, please sign in again to update your email.",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => {
+                setIsEditingEmail(false);
+                setNewEmail(user.email);
+              }
+            },
+            {
+              text: "Sign In Again",
+              onPress: () => {
+                // You might want to implement a reauthentication flow here
+                // For now, we'll just show a message
+                Alert.alert("Info", "Please sign out and sign in again to update your email.");
+              }
+            }
+          ]
+        );
+      } else if (error.code === 'auth/email-already-in-use') {
+        Alert.alert("Error", "This email is already in use by another account.");
+      } else if (error.code === 'auth/invalid-email') {
+        Alert.alert("Error", "Please enter a valid email address.");
+      } else {
+        Alert.alert("Error", "Failed to update email. Please try again.");
+      }
+      
+      // Reset the email field to the current value
+      setNewEmail(user.email);
+    }
+  };
+
+  const handleUpdatePhone = async () => {
+    if (newPhone === user.phoneNumber) {
+      setIsEditingPhone(false);
+      return;
+    }
+
+    try {
+      const updatedUser = {
+        ...user,
+        phoneNumber: newPhone
+      };
+      await User.updateUser(user.uid, updatedUser);
+      
+      setUser(updatedUser);
+      setIsEditingPhone(false);
+      Alert.alert("Success", "Phone number updated successfully");
+    } catch (error) {
+      console.error("Error updating phone number:", error);
+      Alert.alert("Error", "Failed to update phone number. Please try again.");
     }
   };
 
@@ -98,14 +187,83 @@ export const Profile = () => {
             <FontAwesome name="envelope" size={20} color="#666" style={styles.infoIcon} />
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{user?.email}</Text>
+              {isEditingEmail ? (
+                <View style={styles.editContainer}>
+                  <TextInput
+                    style={styles.editInput}
+                    value={newEmail}
+                    onChangeText={setNewEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                  <View style={styles.editButtons}>
+                    <Pressable
+                      style={[styles.editButton, styles.cancelButton]}
+                      onPress={() => {
+                        setIsEditingEmail(false);
+                        setNewEmail(user.email);
+                      }}
+                    >
+                      <Text style={styles.editButtonText}>Cancel</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.editButton, styles.saveButton]}
+                      onPress={handleUpdateEmail}
+                    >
+                      <Text style={[styles.editButtonText, styles.saveButtonText]}>Save</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <Pressable
+                  style={styles.infoValueContainer}
+                  onPress={() => setIsEditingEmail(true)}
+                >
+                  <Text style={styles.infoValue}>{user?.email}</Text>
+                  <FontAwesome name="pencil" size={16} color="#666" style={styles.editIcon} />
+                </Pressable>
+              )}
             </View>
           </View>
           <View style={styles.infoRow}>
             <FontAwesome name="phone" size={20} color="#666" style={styles.infoIcon} />
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Phone</Text>
-              <Text style={styles.infoValue}>{user?.phoneNumber}</Text>
+              {isEditingPhone ? (
+                <View style={styles.editContainer}>
+                  <TextInput
+                    style={styles.editInput}
+                    value={newPhone}
+                    onChangeText={setNewPhone}
+                    keyboardType="phone-pad"
+                  />
+                  <View style={styles.editButtons}>
+                    <Pressable
+                      style={[styles.editButton, styles.cancelButton]}
+                      onPress={() => {
+                        setIsEditingPhone(false);
+                        setNewPhone(user.phoneNumber);
+                      }}
+                    >
+                      <Text style={styles.editButtonText}>Cancel</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.editButton, styles.saveButton]}
+                      onPress={handleUpdatePhone}
+                    >
+                      <Text style={[styles.editButtonText, styles.saveButtonText]}>Save</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <Pressable
+                  style={styles.infoValueContainer}
+                  onPress={() => setIsEditingPhone(true)}
+                >
+                  <Text style={styles.infoValue}>{user?.phoneNumber}</Text>
+                  <FontAwesome name="pencil" size={16} color="#666" style={styles.editIcon} />
+                </Pressable>
+              )}
             </View>
           </View>
         </View>
@@ -285,5 +443,48 @@ const styles = StyleSheet.create({
   suggestionText: {
     color: '#333',
     fontSize: 14,
+  },
+  infoValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editIcon: {
+    marginLeft: 8,
+  },
+  editContainer: {
+    flex: 1,
+  },
+  editInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 8,
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  editButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  editButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  saveButton: {
+    backgroundColor: '#EF2A39',
+  },
+  editButtonText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  saveButtonText: {
+    color: '#fff',
   },
 });
