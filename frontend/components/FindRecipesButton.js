@@ -32,15 +32,11 @@ export const FindRecipesButton = ({
 };
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      position: 'relative',
-    },
     fab: {
       position: 'absolute',
       margin: 16,
       right: 0,
-      bottom: '60%',
+      bottom: 90,
       backgroundColor: '#EF2A39',
       zIndex: 999,
     },

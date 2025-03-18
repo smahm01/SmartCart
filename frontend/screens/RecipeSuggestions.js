@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, FlatList, Pressable, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView, FlatList, Pressable, Image, ActivityIndicator } from "react-native";
 import { HouseholdContext } from "../context/HouseholdContext";
 import { BackButton } from "../components/BackButton";
 import { RequestedItemCard } from "../components/RequestedItemCard";
@@ -12,104 +12,112 @@ import { FindRecipesButton } from "../components/FindRecipesButton";
 import axios from "axios";
 
 export const RecipeSuggestions = ({ route }) => {
-    const { shoppingListName, shoppingListId, shoppingListCategory, shoppingListItems } = route.params;
+  const { shoppingListName, shoppingListId, shoppingListCategory, shoppingListItems } = route.params;
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const [recipes, setRecipes] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+  useEffect(() => {
+    fetchRecipes();
+  }, []);
 
-    useEffect(() => {
-        const fetchRecipes = async () => {
-            try {
-                const response = await axios.get(`https://api.spoonacular.com/recipes/findByIngredients?apiKey=${spoonacularAPIKey}&ingredients=apples,+flour,+potatoes`)
-                console.log(response.status)
-                console.log('API Response:', response.data);
-                if (Array.isArray(response.data)) {
-                    setRecipes(response.data);    
-                } else {
-                    console.error('API response is not an array:', response.data);
-                    setRecipes([]);
-                }
-                setLoading(false);
-            } catch (err) {
-                console.error('Error fetching recipes:', err);
-                setError(err);
-                setRecipes([]);
-                setLoading(false);
-            }
-        }
-        fetchRecipes();
-    }, []);
-
-    if (loading) {
-        return <Text>Loading recipes...</Text>
+  const fetchRecipes = async () => {
+    try {
+      let shoppingListItemNames = [];
+      for (let i = 0; i < shoppingListItems.length; i++) {
+        shoppingListItemNames.push(shoppingListItems[i].name);
+      }
+      const ingredients = shoppingListItemNames.join(',+');
+      const response = await fetch(
+        `https://api.spoonacular.com/recipes/findByIngredients?apiKey=${spoonacularAPIKey}&ingredients=${ingredients}&number=10`
+      );
+      const data = await response.json();
+      setRecipes(data);
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (error) {
-        return <Text>Error fetching recipes: {error}</Text>
-    }
+  const renderRecipeCard = ({ item }) => (
+    <View style={styles.card}>
+      <Image source={{ uri: item.image }} style={styles.image} />
+      <Text style={styles.title}>{item.title}</Text>
+      <Text style={styles.subtitle}>Used Ingredients:</Text>
+      {item.usedIngredients.map((ingredient, index) => (
+        <Text key={index} style={styles.usedIngredient}>
+          {ingredient.original}
+        </Text>
+      ))}
+      <Text style={styles.subtitle}>Missing Ingredients:</Text>
+      {item.missedIngredients.map((ingredient, index) => (
+        <Text key={index} style={styles.missingIngredient}>
+          {ingredient.original}
+        </Text>
+      ))}
+    </View>
+  );
 
-    console.log('Recipes:', recipes);
-
+  if (loading) {
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.header}>Recipe Suggestions</Text>
-            <Text>Shopping List Name: {shoppingListName}</Text>
-            <Text>Shopping List ID: {shoppingListId}</Text>
-            <Text>Shopping List Category: {shoppingListCategory}</Text>
-            <Text>Shopping List Length: {shoppingListItems.length}</Text>
-
-            {/* Display the fetched recipes */}
-            <Text style={styles.subHeader}>Recipes:</Text>
-            {Array.isArray(recipes) && recipes.length > 0 ? (
-                recipes.map((recipe) => (
-                    <View key={recipe.id} style={styles.recipeCard}>
-                        <Image
-                            source={{ uri: recipe.image }}
-                            style={styles.recipeImage}
-                        />
-                        <Text style={styles.recipeTitle}>{recipe.title}</Text>
-                    </View>
-                ))
-            ) : (
-                <Text>No recipes found.</Text>
-            )}
-        </ScrollView>
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
     );
-}
+  }
+
+  return (
+    <FlatList
+      data={recipes}
+      renderItem={renderRecipeCard}
+      keyExtractor={(item) => item.id.toString()}
+      contentContainerStyle={styles.list}
+    />
+  );
+};
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-    },
-    header: {
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 16,
-    },
-    subHeader: {
-        fontSize: 20,
-        fontWeight: "bold",
-        marginTop: 16,
-        marginBottom: 8,
-    },
-    recipeCard: {
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 8,
-        padding: 8,
-    },
-    recipeImage: {
-        width: "100%",
-        height: 150,
-        borderRadius: 8,
-        marginBottom: 8,
-    },
-    recipeTitle: {
-        fontSize: 16,
-        fontWeight: "bold",
-    },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  list: {
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  image: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  usedIngredient: {
+    fontSize: 14,
+    color: 'green',
+  },
+  missingIngredient: {
+    fontSize: 14,
+    color: 'red',
+  },
 });
-
-

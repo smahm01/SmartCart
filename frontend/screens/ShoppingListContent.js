@@ -122,7 +122,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "white",
-    position: "relative",
+  },
+  flatListContainer: {
+    flex: 1,
   },
   backContainer: {
     marginTop: 5,
