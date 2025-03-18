@@ -29,9 +29,16 @@ export const AddItemShoppingList = ({ route }) => {
     const handleQuantityChange = (productId, value) => {
         setQuantities({
           ...quantities,
-          [productId]: parseInt(value) || 1
+          [productId]: parseInt(value) || ""
         });
-      };
+    };
+
+    const handleBlur = (productId) => {
+        setQuantities((quantities) => ({
+          ...quantities,
+          [productId]: quantities[productId] === "" ? 1 : quantities[productId]
+        }));
+    }
 
     const getItemDetails = async () => {
         try {
@@ -56,19 +63,43 @@ export const AddItemShoppingList = ({ route }) => {
             
             for (let i = 0; i < products.length; i++) {
                 console.log('id: ' + products[i].id);
-                console.log('product name: ' + products[i].product_name);
-                console.log('brand name: ' + products[i].brands);
-                //brands is a string of words separated by commas, take only the first word
-                //if brands is not undefined
-                if (products[i].brands !== undefined) {
-                    products[i].brands = products[i].brands.split(',')[0];
+                
+                //if product_name is empty, set to generic name or "Unknown"
+                if (products[i].product_name === "") {
+                    products[i].product_name = products[i].generic_name === "" ? "Unknown" : products[i].generic_name;
                 }
+                console.log('product name: ' + products[i].product_name);
+                
+                console.log('brand name: ' + products[i].brands);
+                //brands is a string of words separated by commas
+                //if brands is not undefined or empty, take the first word, otherwise set to "Unknown"
+                if (products[i].brands !== undefined && products[i].brands !== "") {
+                    products[i].brands = products[i].brands.split(',')[0];
+                } else {
+                    products[i].brands = "Unknown";
+                }
+
+                //categories is a string of words separated by commas, turn it into a array or set to "Unknown" if empty
+                products[i].categories === "" ? products[i].categories = "Unknown" : products[i].categories = products[i].categories.split(',');
                 console.log('categories: ' + products[i].categories);
-                //categories is a string of words separated by commas, turn it into a array
-                products[i].categories = products[i].categories.split(',');
+                
+                //allergens is a string of words separated by commas, turn it into a array or set to "Unknown" if empty
+                products[i].allergens === "" ? products[i].allergens = "Unknown" : products[i].allergens = products[i].allergens.split(',');
                 console.log('allergens: ' + products[i].allergens);
-                //allergens is a string of words separated by commas, turn it into a array
-                products[i].allergens = products[i].allergens.split(',');
+                
+                // if any nutrition value is undefined, set to "Unknown"
+                if (products[i].nutriments.proteins_100g === undefined) {
+                    products[i].nutriments.proteins_100g = "Unknown";
+                }
+                if (products[i].nutriments.fat_100g === undefined) {
+                    products[i].nutriments.fat_100g = "Unknown";
+                }
+                if (products[i].nutriments.carbohydrates_100g === undefined) {
+                    products[i].nutriments.carbohydrates_100g = "Unknown";
+                }
+                if (products[i].nutriments["energy-kcal_100g"] === undefined) {
+                    products[i].nutriments["energy-kcal_100g"] = "Unknown";
+                }
                 console.log('protein: ' + products[i].nutriments.proteins_100g);
                 console.log('fat: ' + products[i].nutriments.fat_100g);
                 console.log('carbs: ' + products[i].nutriments.carbohydrates_100g);
@@ -159,8 +190,9 @@ export const AddItemShoppingList = ({ route }) => {
                   style={styles.quantityInput}
                   keyboardType="numeric"
                   placeholder="Qty"
-                  value={quantities[item.id] ? quantities[item.id].toString() : '1'}
+                  value={quantities[item.id] !== undefined ? quantities[item.id].toString() : '1'}
                   onChangeText={(value) => handleQuantityChange(item.id, value)}
+                  onBlur={() => handleBlur(item.id)}
                 />
                 <TouchableOpacity
                   style={styles.addButton}
