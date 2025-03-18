@@ -8,8 +8,6 @@ import { BackButton } from "../components/BackButton";
 import { RequestedItem } from "../firebase/models/RequestedItem";
 import { auth } from "../firebase/config";
 
-
-
 export const AddItemShoppingList = ({ route }) => {
     const { shoppingListName, shoppingListId, shoppingListCategory } = route.params;
     const { householdId } = useContext(HouseholdContext);
@@ -18,6 +16,7 @@ export const AddItemShoppingList = ({ route }) => {
     const [quantities, setQuantities] = useState({});
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [itemAlreadyInList, setItemAlreadyInList] = useState(false);
     const navigation = useNavigation();
 
 
@@ -116,8 +115,23 @@ export const AddItemShoppingList = ({ route }) => {
         }
     }
 
-    const handleAddToList = (product) => {
+    const handleAddToList = async (product) => {
         const quantity = quantities[product.id] || 1;
+
+        // Check if the item is already in the list
+        const itemsAlreadyInList = await RequestedItem.getRequestedItems(
+          householdId,
+          shoppingListId
+        );
+
+        if (itemsAlreadyInList.length !== 0 && itemsAlreadyInList.some((item) => item.productUpc === product.id)) {
+          setItemAlreadyInList(true);
+          setTimeout(() => {
+            setItemAlreadyInList(false);
+        }, 2000);
+          return;
+        }
+
         const requestedItem = new RequestedItem(
             householdId, 
             shoppingListId,
@@ -222,6 +236,19 @@ export const AddItemShoppingList = ({ route }) => {
                 <Text style={styles.modalText}>Item added successfully!</Text>
               </View>
             </View>
+          </Modal>
+
+          {/* Error Modal */}
+          <Modal
+            transparent={true}
+            visible={itemAlreadyInList}
+            onRequestClose={() => setItemAlreadyInList(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.errorModalText}>Item already in list!</Text>
+              </View>
+              </View>
           </Modal>
         </View>
       );
@@ -334,6 +361,10 @@ const styles = StyleSheet.create({
     modalText: {
         fontSize: 18,
         color: '#28a745',
+    },
+    errorModalText: {
+        fontSize: 18,
+        color: "#dc3545",
     },
     loadingContainer: {
         flex: 1,
