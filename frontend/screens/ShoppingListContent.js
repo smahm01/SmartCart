@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
-import { View, Text, StyleSheet, FlatList, Pressable, TouchableOpacity } from "react-native";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TouchableWithoutFeedback } from "react-native";
 import { HouseholdContext } from "../context/HouseholdContext";
 import { BackButton } from "../components/BackButton";
 import { RequestedItemCard } from "../components/RequestedItemCard";
@@ -24,6 +24,11 @@ export const ShoppingListContent = ({ route }) => {
   const [numItemsFulfilled, setNumItemsFulfilled] = useState(0);
   const navigation = useNavigation();
 
+  // Add ref to track the currently open swipeable
+  const currentOpenSwipeableRef = useRef(null);
+  // Create refs map for all swipeables
+  const swipeableRefsMap = useRef({});
+
   useEffect(() => {
     const shoppingListItemsCollection = collection(
       firestore,
@@ -43,8 +48,15 @@ export const ShoppingListContent = ({ route }) => {
 
   const renderRightAction = (progress, dragX, itemId) => {
     const animatedStyle = useAnimatedStyle(() => {
-      const width = interpolate(dragX.value, [0, -100, -400], [100, 100, 200], {extrapolateRight: 'clamp', extrapolateLeft: 'clamp'}); // Width of the button
-      const translateX = interpolate(dragX.value, [0, -100], [100, 0], {extrapolateRight: 'clamp', extrapolateLeft: 'clamp'}); // Slide effect
+      const width = interpolate(dragX.value, [0, -100, -400], [100, 100, 200], {
+        extrapolateRight: 'clamp',
+        extrapolateLeft: 'clamp'
+      }); // Width of the button
+      const translateX = interpolate(dragX.value, [0, -100], [100, 0], {
+        extrapolateRight: 'clamp',
+        extrapolateLeft: 'clamp'
+      }); // Slide effect
+
       return {
         transform: [{ translateX }],
         width,
@@ -64,6 +76,13 @@ export const ShoppingListContent = ({ route }) => {
     );
   }
 
+  const closeSwipeable = () => {
+    if (currentOpenSwipeableRef.current) {
+      currentOpenSwipeableRef.current.close();
+      currentOpenSwipeableRef.current = null;
+    }
+  };
+
   const handleDeleteItem = async (requestedItemId) => {
     try {
       await RequestedItem.deleteRequestedItem(householdId, shoppingListId, requestedItemId);
@@ -74,82 +93,105 @@ export const ShoppingListContent = ({ route }) => {
   }
 
   return (
-    <GestureHandlerRootView>
-      <View style={styles.container}>
-        <View style={styles.backContainer}>
-          <BackButton
-            onPress={() => navigation.goBack()}
-            backText="Shopping Lists"
-          />
-        </View>
-        <View style={styles.header}>
-          <Text style={styles.listName}>{shoppingListName}</Text>
-          <View style={styles.addButtonContainer}>
-            <AddButton
-              size={28}
-              color={"#EF2A39"}
-              onPress={() =>
-                navigation.navigate("AddCustomItemShoppingList", {
-                  shoppingListName,
-                  shoppingListId,
-                  shoppingListCategory,
-                })
-              }
-            />
-            <SearchButton
-              style={styles.searchButton}
-              size={28}
-              color={"#EF2A39"}
-              onPress={() =>
-                navigation.navigate("AddItemShoppingList", {
-                  shoppingListName,
-                  shoppingListId,
-                  shoppingListCategory,
-                })
-              }
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <TouchableWithoutFeedback onPress={closeSwipeable}>
+        <View style={styles.container}>
+          <View style={styles.backContainer}>
+            <BackButton
+              onPress={() => navigation.goBack()}
+              backText="Shopping Lists"
             />
           </View>
-        </View>
-        {shoppingListCategory !== "None" && (
-          <View style={{ marginLeft: 12, marginBottom: 8 }}>
-            <View style={styles.listCategoryTag}>
-              <Text style={styles.listCategoryTagText}>
-                {shoppingListCategory}
-              </Text>
+          <View style={styles.header}>
+            <Text style={styles.listName}>{shoppingListName}</Text>
+            <View style={styles.addButtonContainer}>
+              <AddButton
+                size={28}
+                color={"#EF2A39"}
+                onPress={() =>
+                  navigation.navigate("AddCustomItemShoppingList", {
+                    shoppingListName,
+                    shoppingListId,
+                    shoppingListCategory,
+                  })
+                }
+              />
+              <SearchButton
+                style={styles.searchButton}
+                size={28}
+                color={"#EF2A39"}
+                onPress={() =>
+                  navigation.navigate("AddItemShoppingList", {
+                    shoppingListName,
+                    shoppingListId,
+                    shoppingListCategory,
+                  })
+                }
+              />
             </View>
           </View>
-        )}
-
-        {/* FlatList of Shopping List Items */}
-        <View>
-          {hasShoppingListItems ? (
-            <FlatList
-              data={shoppingListItems}
-              renderItem={({ item }) => (
-                <ReanimatedSwipeable
-                  renderRightActions={(progress, dragX) => renderRightAction(progress, dragX, item.id)}
-                >
-                  <RequestedItemCard
-                    shoppingListId={shoppingListId}
-                    requestedItemId={item.id}
-                    requestedItemName={item.name}
-                    requestedItemQuantity={item.quantityRequested}
-                    requestedItemBrand={item.brand}
-                    isrequestedItemFulfilled={item.requestFullfilled}
-                  />
-                </ReanimatedSwipeable>
-              )}
-              keyExtractor={(item) => item.id}
-            />
-          ) : (
-            <View style={styles.noShoppingListItems}>
-              <Text style={styles.noShoppingListItemsText}>
-                No items found in this shopping list.
-              </Text>
+          {shoppingListCategory !== "None" && (
+            <View style={{ marginLeft: 12, marginBottom: 8 }}>
+              <View style={styles.listCategoryTag}>
+                <Text style={styles.listCategoryTagText}>
+                  {shoppingListCategory}
+                </Text>
+              </View>
             </View>
           )}
+
+          {/* FlatList of Shopping List Items */}
+          <View>
+            {hasShoppingListItems ? (
+              <FlatList
+                data={shoppingListItems}
+                renderItem={({ item }) => (
+                  <ReanimatedSwipeable
+                    ref={(ref) => {
+                      if (ref) {
+                        swipeableRefsMap.current[item.id] = ref;
+                      }
+                    }}
+                    onSwipeableWillOpen={() => {
+                      // Close previously open swipeable if different from current
+                      if (currentOpenSwipeableRef.current && 
+                        currentOpenSwipeableRef.current !== swipeableRefsMap.current[item.id]) {
+                        currentOpenSwipeableRef.current.close();
+                      }
+                    
+                      // Update the current open swipeable
+                      currentOpenSwipeableRef.current = swipeableRefsMap.current[item.id];
+                    }}
+                    onSwipeableWillClose={() => {
+                      // If this is the currently tracked open swipeable, reset the ref to null
+                      if (currentOpenSwipeableRef.current === swipeableRefsMap.current[item.id]) {
+                        currentOpenSwipeableRef.current = null;
+                      }
+                    }}
+                    renderRightActions={(progress, dragX) => renderRightAction(progress, dragX, item.id)}
+                  >
+                    <RequestedItemCard
+                      shoppingListId={shoppingListId}
+                      requestedItemId={item.id}
+                      requestedItemName={item.name}
+                      requestedItemQuantity={item.quantityRequested}
+                      requestedItemBrand={item.brand}
+                      isrequestedItemFulfilled={item.requestFullfilled}
+                    />
+                  </ReanimatedSwipeable>
+                )}
+                keyExtractor={(item) => item.id}
+              />
+            ) : (
+              <View style={styles.noShoppingListItems}>
+                <Text style={styles.noShoppingListItemsText}>
+                  No items found in this shopping list.
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </GestureHandlerRootView>
   );
 };
