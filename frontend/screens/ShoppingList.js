@@ -49,7 +49,7 @@ export const ShoppingList = () => {
       <Text style={styles.upperTitle}>{householdName}</Text>
       <Text style={styles.lowerTitle}>Shopping Lists</Text>
       {/* FlatList of Shopping Lists */}
-      <View>
+      <View style={styles.container}>
         {hasShoppingLists ? (
           <FlatList
             data={shoppingLists}
