@@ -48,7 +48,7 @@ export const ShoppingListContent = ({ route }) => {
 
   const renderRightAction = (progress, dragX, itemId) => {
     const animatedStyle = useAnimatedStyle(() => {
-      const width = interpolate(dragX.value, [0, -100, -400], [100, 100, 200], {
+      const width = interpolate(dragX.value, [0, -100, -400], [100, 100, 400], {
         extrapolateRight: 'clamp',
         extrapolateLeft: 'clamp'
       }); // Width of the button
@@ -56,10 +56,17 @@ export const ShoppingListContent = ({ route }) => {
         extrapolateRight: 'clamp',
         extrapolateLeft: 'clamp'
       }); // Slide effect
+      const opacity = interpolate(
+        dragX.value,
+        [-100, 0],
+        [1, 0],
+        { extrapolateRight: 'clamp' }
+      );
 
       return {
         transform: [{ translateX }],
         width,
+        opacity
       };
     });
 
@@ -141,44 +148,49 @@ export const ShoppingListContent = ({ route }) => {
           )}
 
           {/* FlatList of Shopping List Items */}
-          <View>
+          <View style={styles.container}>
             {hasShoppingListItems ? (
               <FlatList
                 data={shoppingListItems}
                 renderItem={({ item }) => (
-                  <ReanimatedSwipeable
-                    ref={(ref) => {
-                      if (ref) {
-                        swipeableRefsMap.current[item.id] = ref;
-                      }
-                    }}
-                    onSwipeableWillOpen={() => {
-                      // Close previously open swipeable if different from current
-                      if (currentOpenSwipeableRef.current && 
-                        currentOpenSwipeableRef.current !== swipeableRefsMap.current[item.id]) {
-                        currentOpenSwipeableRef.current.close();
-                      }
-                    
-                      // Update the current open swipeable
-                      currentOpenSwipeableRef.current = swipeableRefsMap.current[item.id];
-                    }}
-                    onSwipeableWillClose={() => {
-                      // If this is the currently tracked open swipeable, reset the ref to null
-                      if (currentOpenSwipeableRef.current === swipeableRefsMap.current[item.id]) {
-                        currentOpenSwipeableRef.current = null;
-                      }
-                    }}
-                    renderRightActions={(progress, dragX) => renderRightAction(progress, dragX, item.id)}
-                  >
-                    <RequestedItemCard
-                      shoppingListId={shoppingListId}
-                      requestedItemId={item.id}
-                      requestedItemName={item.name}
-                      requestedItemQuantity={item.quantityRequested}
-                      requestedItemBrand={item.brand}
-                      isrequestedItemFulfilled={item.requestFullfilled}
-                    />
-                  </ReanimatedSwipeable>
+                  <View style={styles.shadowContainer}>
+                    <View style={styles.borderRadiusContainer}>
+                      <ReanimatedSwipeable
+                        ref={(ref) => {
+                          if (ref) {
+                            swipeableRefsMap.current[item.id] = ref;
+                          }
+                        }}
+                        overshootFriction={5}  // Reduce overshoot
+                        onSwipeableWillOpen={() => {
+                          // Close previously open swipeable if different from current
+                          if (currentOpenSwipeableRef.current && 
+                            currentOpenSwipeableRef.current !== swipeableRefsMap.current[item.id]) {
+                            currentOpenSwipeableRef.current.close();
+                          }
+                        
+                          // Update the current open swipeable
+                          currentOpenSwipeableRef.current = swipeableRefsMap.current[item.id];
+                        }}
+                        onSwipeableWillClose={() => {
+                          // If this is the currently tracked open swipeable, reset the ref to null
+                          if (currentOpenSwipeableRef.current === swipeableRefsMap.current[item.id]) {
+                            currentOpenSwipeableRef.current = null;
+                          }
+                        }}
+                        renderRightActions={(progress, dragX) => renderRightAction(progress, dragX, item.id)}
+                      >
+                        <RequestedItemCard
+                          shoppingListId={shoppingListId}
+                          requestedItemId={item.id}
+                          requestedItemName={item.name}
+                          requestedItemQuantity={item.quantityRequested}
+                          requestedItemBrand={item.brand}
+                          isrequestedItemFulfilled={item.requestFullfilled}
+                        />
+                      </ReanimatedSwipeable>
+                    </View>
+                  </View>
                 )}
                 keyExtractor={(item) => item.id}
               />
@@ -256,5 +268,19 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
-  }
+  },
+  shadowContainer: {
+    marginVertical: 4,
+    marginHorizontal: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  borderRadiusContainer: {
+    borderRadius: 8,
+    overflow: 'hidden',
+    // backgroundColor: "#EF2A39",
+  },
 });
