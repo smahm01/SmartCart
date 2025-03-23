@@ -8,8 +8,6 @@ import { BackButton } from "../components/BackButton";
 import { RequestedItem } from "../firebase/models/RequestedItem";
 import { auth } from "../firebase/config";
 
-
-
 export const AddItemShoppingList = ({ route }) => {
     const { shoppingListName, shoppingListId, shoppingListCategory } = route.params;
     const { householdId } = useContext(HouseholdContext);
@@ -18,6 +16,7 @@ export const AddItemShoppingList = ({ route }) => {
     const [quantities, setQuantities] = useState({});
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [itemAlreadyInList, setItemAlreadyInList] = useState(false);
     const navigation = useNavigation();
 
 
@@ -29,9 +28,16 @@ export const AddItemShoppingList = ({ route }) => {
     const handleQuantityChange = (productId, value) => {
         setQuantities({
           ...quantities,
-          [productId]: parseInt(value) || 1
+          [productId]: parseInt(value) || ""
         });
-      };
+    };
+
+    const handleBlur = (productId) => {
+        setQuantities((quantities) => ({
+          ...quantities,
+          [productId]: quantities[productId] === "" ? 1 : quantities[productId]
+        }));
+    }
 
     const getItemDetails = async () => {
         try {
@@ -56,19 +62,43 @@ export const AddItemShoppingList = ({ route }) => {
             
             for (let i = 0; i < products.length; i++) {
                 console.log('id: ' + products[i].id);
-                console.log('product name: ' + products[i].product_name);
-                console.log('brand name: ' + products[i].brands);
-                //brands is a string of words separated by commas, take only the first word
-                //if brands is not undefined
-                if (products[i].brands !== undefined) {
-                    products[i].brands = products[i].brands.split(',')[0];
+                
+                //if product_name is empty, set to generic name or "Unknown"
+                if (products[i].product_name === "") {
+                    products[i].product_name = products[i].generic_name === "" ? "Unknown" : products[i].generic_name;
                 }
+                console.log('product name: ' + products[i].product_name);
+                
+                console.log('brand name: ' + products[i].brands);
+                //brands is a string of words separated by commas
+                //if brands is not undefined or empty, take the first word, otherwise set to "Unknown"
+                if (products[i].brands !== undefined && products[i].brands !== "") {
+                    products[i].brands = products[i].brands.split(',')[0];
+                } else {
+                    products[i].brands = "Unknown";
+                }
+
+                //categories is a string of words separated by commas, turn it into a array or set to "Unknown" if empty
+                products[i].categories === "" ? products[i].categories = "Unknown" : products[i].categories = products[i].categories.split(',');
                 console.log('categories: ' + products[i].categories);
-                //categories is a string of words separated by commas, turn it into a array
-                products[i].categories = products[i].categories.split(',');
+                
+                //allergens is a string of words separated by commas, turn it into a array or set to "Unknown" if empty
+                products[i].allergens === "" ? products[i].allergens = "Unknown" : products[i].allergens = products[i].allergens.split(',');
                 console.log('allergens: ' + products[i].allergens);
-                //allergens is a string of words separated by commas, turn it into a array
-                products[i].allergens = products[i].allergens.split(',');
+                
+                // if any nutrition value is undefined, set to "Unknown"
+                if (products[i].nutriments.proteins_100g === undefined) {
+                    products[i].nutriments.proteins_100g = "Unknown";
+                }
+                if (products[i].nutriments.fat_100g === undefined) {
+                    products[i].nutriments.fat_100g = "Unknown";
+                }
+                if (products[i].nutriments.carbohydrates_100g === undefined) {
+                    products[i].nutriments.carbohydrates_100g = "Unknown";
+                }
+                if (products[i].nutriments["energy-kcal_100g"] === undefined) {
+                    products[i].nutriments["energy-kcal_100g"] = "Unknown";
+                }
                 console.log('protein: ' + products[i].nutriments.proteins_100g);
                 console.log('fat: ' + products[i].nutriments.fat_100g);
                 console.log('carbs: ' + products[i].nutriments.carbohydrates_100g);
@@ -85,8 +115,23 @@ export const AddItemShoppingList = ({ route }) => {
         }
     }
 
-    const handleAddToList = (product) => {
+    const handleAddToList = async (product) => {
         const quantity = quantities[product.id] || 1;
+
+        // Check if the item is already in the list
+        const itemsAlreadyInList = await RequestedItem.getRequestedItems(
+          householdId,
+          shoppingListId
+        );
+
+        if (itemsAlreadyInList.length !== 0 && itemsAlreadyInList.some((item) => item.productUpc === product.id)) {
+          setItemAlreadyInList(true);
+          setTimeout(() => {
+            setItemAlreadyInList(false);
+        }, 2000);
+          return;
+        }
+
         const requestedItem = new RequestedItem(
             householdId, 
             shoppingListId,
@@ -159,8 +204,9 @@ export const AddItemShoppingList = ({ route }) => {
                   style={styles.quantityInput}
                   keyboardType="numeric"
                   placeholder="Qty"
-                  value={quantities[item.id] ? quantities[item.id].toString() : '1'}
+                  value={quantities[item.id] !== undefined ? quantities[item.id].toString() : '1'}
                   onChangeText={(value) => handleQuantityChange(item.id, value)}
+                  onBlur={() => handleBlur(item.id)}
                 />
                 <TouchableOpacity
                   style={styles.addButton}
@@ -190,6 +236,19 @@ export const AddItemShoppingList = ({ route }) => {
                 <Text style={styles.modalText}>Item added successfully!</Text>
               </View>
             </View>
+          </Modal>
+
+          {/* Error Modal */}
+          <Modal
+            transparent={true}
+            visible={itemAlreadyInList}
+            onRequestClose={() => setItemAlreadyInList(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.errorModalText}>Item already in list!</Text>
+              </View>
+              </View>
           </Modal>
         </View>
       );
@@ -302,6 +361,10 @@ const styles = StyleSheet.create({
     modalText: {
         fontSize: 18,
         color: '#28a745',
+    },
+    errorModalText: {
+        fontSize: 18,
+        color: "#dc3545",
     },
     loadingContainer: {
         flex: 1,

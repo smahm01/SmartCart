@@ -96,6 +96,8 @@ export const ShoppingListContent = ({ route }) => {
                 requestedItemQuantity={item.quantityRequested}
                 requestedItemBrand={item.brand}
                 isrequestedItemFulfilled={item.requestFullfilled}
+                allergens={item.allergens || []}
+                categories={item.categories || []}
               />
             )}
             keyExtractor={(item) => item.id}

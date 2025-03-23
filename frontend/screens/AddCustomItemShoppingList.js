@@ -16,9 +16,10 @@ export const AddCustomItemShoppingList = ({ route }) => {
     const [allergens, setAllergens] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [itemAlreadyInList, setItemAlreadyInList] = useState(false);
     const navigation = useNavigation();
 
-    const handleAddToList = () => {
+    const handleAddToList = async () => {
         if (!productName.trim()) {
             setErrorMessage("Product name is required.");
             return
@@ -29,6 +30,20 @@ export const AddCustomItemShoppingList = ({ route }) => {
         }
 
         setErrorMessage(""); // Clear error message
+
+        // Check if the item is already in the list
+        const itemsAlreadyInList = await RequestedItem.getRequestedItems(
+            householdId,
+            shoppingListId
+        );
+
+        if (itemsAlreadyInList.length !== 0 && itemsAlreadyInList.some((item) => item.name === productName && item.brand === brand)) {
+            setItemAlreadyInList(true);
+            setTimeout(() => {
+                setItemAlreadyInList(false);
+            }, 2000);
+            return;
+        }
 
         const requestedItem = new RequestedItem(
             householdId,
@@ -130,6 +145,18 @@ export const AddCustomItemShoppingList = ({ route }) => {
                     </View>
                 </View>
             </Modal>
+            {/* Error Modal */}
+            <Modal
+                transparent={true}
+                visible={itemAlreadyInList}
+                onRequestClose={() => setItemAlreadyInList(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.errorModalText}>Item already in list!</Text>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -188,6 +215,10 @@ const styles = StyleSheet.create({
     modalText: {
         fontSize: 18,
         color: "#28a745",
+    },
+    errorModalText: {
+        fontSize: 18,
+        color: "#dc3545",
     },
     errorText: {
         color: "#dc3545",
