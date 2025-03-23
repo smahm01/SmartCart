@@ -1,21 +1,19 @@
-import React, { useContext, useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, FlatList, Pressable, Image, ActivityIndicator } from "react-native";
-import { HouseholdContext } from "../context/HouseholdContext";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ActivityIndicator } from "react-native";
 import { BackButton } from "../components/BackButton";
-import { RequestedItemCard } from "../components/RequestedItemCard";
-import { collection, onSnapshot, query } from "firebase/firestore";
-import { firestore, spoonacularAPIKey } from "../firebase/config";
+import { spoonacularAPIKey } from "../firebase/config";
 import { useNavigation } from "@react-navigation/native";
-import { AddButton } from "../components/AddButton";
-import { SearchButton } from "../components/SearchButton";
-import { FindRecipesButton } from "../components/FindRecipesButton";
-import axios from "axios";
+import AllergensPopup from './AllergensPopup';
 
 export const RecipeSuggestions = ({ route }) => {
     const { shoppingListName, shoppingListId, shoppingListCategory, shoppingListItems } = route.params;
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [hasItems, setHasItems] = useState(false);
+    const [isPopupVisible, setIsPopupVisible] = useState(false);
+    const togglePopup = () => {
+        setIsPopupVisible(!isPopupVisible);
+    };
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -46,24 +44,36 @@ export const RecipeSuggestions = ({ route }) => {
         }
     };
 
-    const renderRecipeCard = ({ item }) => (
-        <View style={styles.card}>
-            <Image source={{ uri: item.image }} style={styles.image} />
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.subtitle}>Used Ingredients:</Text>
-            {item.usedIngredients.map((ingredient, index) => (
-                <Text key={index} style={styles.usedIngredient}>
-                    {ingredient.original}
-                </Text>
-            ))}
-            <Text style={styles.subtitle}>Missing Ingredients:</Text>
-            {item.missedIngredients.map((ingredient, index) => (
-                <Text key={index} style={styles.missingIngredient}>
-                    {ingredient.original}
-                </Text>
-            ))}
-        </View>
-    );
+    const renderRecipeCard = ({ item }) => {
+
+
+        return (
+            <View style={styles.card}>
+                <Image source={{ uri: item.image }} style={styles.image} />
+                <Text style={styles.title}>{item.title}</Text>
+                <Text style={styles.subtitle}>Used Ingredients:</Text>
+                {item.usedIngredients.map((ingredient, index) => (
+                    <Text key={index} style={styles.usedIngredient}>
+                        {ingredient.original}
+                    </Text>
+                ))}
+                <Text style={styles.subtitle}>Missing Ingredients:</Text>
+                {item.missedIngredients.map((ingredient, index) => (
+                    <Text key={index} style={styles.missingIngredient}>
+                        {ingredient.original}
+                    </Text>
+                ))}
+                <TouchableOpacity onPress={togglePopup} style={styles.allergensButton}>
+                    <Text style={styles.allergensButtonText}>Allergens</Text>
+                </TouchableOpacity>
+                <AllergensPopup
+                    visible={isPopupVisible}
+                    onClose={togglePopup}
+                    allergens={[]}
+                />
+            </View>
+        );
+    };
 
     if (loading) {
         return (
@@ -77,7 +87,7 @@ export const RecipeSuggestions = ({ route }) => {
         <View style={styles.container}>
             <View>
                 <View style={styles.backContainer}>
-                    <BackButton 
+                    <BackButton
                         onPress={() => navigation.goBack()}
                         backText={shoppingListName}
                     />
@@ -85,20 +95,22 @@ export const RecipeSuggestions = ({ route }) => {
                 <View style={styles.header}>
                     <Text style={styles.listName}>Suggested Recipes</Text>
                 </View>
-                
+
             </View>
             {hasItems ? (
-                <FlatList
-                data={recipes}
-                renderItem={renderRecipeCard}
-                keyExtractor={(item) => item.id.toString()}
-                contentContainerStyle={styles.list}
-                />
+                <View>
+                    <FlatList
+                        data={recipes}
+                        renderItem={renderRecipeCard}
+                        keyExtractor={(item) => item.id.toString()}
+                        contentContainerStyle={styles.list}
+                    />
+                </View>
             ) : (
                 <View style={styles.noShoppingListItems}>
                     <Text>Add items to the shopping list to view a list of suggested recipes!</Text>
                 </View>)}
-            
+
         </View>
 
     );
@@ -135,7 +147,7 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: "bold",
         marginRight: 12,
-      },
+    },
     card: {
         backgroundColor: '#fff',
         borderRadius: 8,
@@ -170,5 +182,16 @@ const styles = StyleSheet.create({
     missingIngredient: {
         fontSize: 14,
         color: 'red',
+    },
+    allergensButton: {
+        marginTop: 10,
+        padding: 10,
+        backgroundColor: '#FF6347',
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    allergensButtonText: {
+        color: 'white',
+        fontSize: 16,
     },
 });
