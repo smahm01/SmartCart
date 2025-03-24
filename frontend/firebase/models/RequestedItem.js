@@ -170,6 +170,8 @@ class RequestedItem {
           householdId: householdId,
           shoppingListId: shoppingListId,
           categories: requestedItem.categories,
+          allergens: requestedItem.allergens,
+          brand: requestedItem.brand,
           dateRequested: requestedItem.dateRequested,
           itemRequester: requestedItem.itemRequester,
           name: requestedItem.name,
