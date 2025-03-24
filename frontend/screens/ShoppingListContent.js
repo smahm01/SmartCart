@@ -151,46 +151,42 @@ export const ShoppingListContent = ({ route }) => {
           <View style={styles.container}>
             {hasShoppingListItems ? (
               <FlatList
+                contentContainerStyle={{ paddingBottom: 100 }}
                 data={shoppingListItems}
                 renderItem={({ item }) => (
-                  <View style={styles.shadowContainer}>
-                    <View style={styles.borderRadiusContainer}>
-                      <ReanimatedSwipeable
-                        ref={(ref) => {
-                          if (ref) {
-                            swipeableRefsMap.current[item.id] = ref;
-                          }
-                        }}
-                        overshootFriction={5}  // Reduce overshoot
-                        onSwipeableWillOpen={() => {
-                          // Close previously open swipeable if different from current
-                          if (currentOpenSwipeableRef.current && 
-                            currentOpenSwipeableRef.current !== swipeableRefsMap.current[item.id]) {
-                            currentOpenSwipeableRef.current.close();
-                          }
-                        
-                          // Update the current open swipeable
-                          currentOpenSwipeableRef.current = swipeableRefsMap.current[item.id];
-                        }}
-                        onSwipeableWillClose={() => {
-                          // If this is the currently tracked open swipeable, reset the ref to null
-                          if (currentOpenSwipeableRef.current === swipeableRefsMap.current[item.id]) {
-                            currentOpenSwipeableRef.current = null;
-                          }
-                        }}
-                        renderRightActions={(progress, dragX) => renderRightAction(progress, dragX, item.id)}
-                      >
-                        <RequestedItemCard
-                          shoppingListId={shoppingListId}
-                          requestedItemId={item.id}
-                          requestedItemName={item.name}
-                          requestedItemQuantity={item.quantityRequested}
-                          requestedItemBrand={item.brand}
-                          isrequestedItemFulfilled={item.requestFullfilled}
-                          allergens={item.allergens || []}
-                          categories={item.categories || []}
-                        />
-                      </ReanimatedSwipeable>
+                  <View>
+                    <View style={styles.shadowContainer}>
+                      <View style={styles.borderRadiusContainer}>
+                        <ReanimatedSwipeable
+                          ref={(ref) => {
+                            if (ref) {
+                              swipeableRefsMap.current[item.id] = ref;
+                            }
+                          }}
+                          overshootFriction={5}  // Reduce overshoot
+                          onSwipeableWillOpen={() => {
+                            // Close previously open swipeable if different from current
+                            if (currentOpenSwipeableRef.current && 
+                              currentOpenSwipeableRef.current !== swipeableRefsMap.current[item.id]) {
+                              currentOpenSwipeableRef.current.close();
+                            }
+                            // Update the current open swipeable
+                            currentOpenSwipeableRef.current = swipeableRefsMap.current[item.id];
+                          }}
+                          onSwipeableWillClose={() => {
+                            // If this is the currently tracked open swipeable, reset the ref to null
+                            if (currentOpenSwipeableRef.current === swipeableRefsMap.current[item.id]) {
+                              currentOpenSwipeableRef.current = null;
+                            }
+                          }}
+                          renderRightActions={(progress, dragX) => renderRightAction(progress, dragX, item.id)}
+                        >
+                          <RequestedItemCard
+                            shoppingListId={shoppingListId}
+                            requestedItem={item}
+                          />
+                        </ReanimatedSwipeable>
+                      </View>
                     </View>
                   </View>
                 )}
@@ -283,6 +279,5 @@ const styles = StyleSheet.create({
   borderRadiusContainer: {
     borderRadius: 8,
     overflow: 'hidden',
-    // backgroundColor: "#EF2A39",
   },
 });

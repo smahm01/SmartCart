@@ -1,26 +1,29 @@
 import React, { useContext, useState, useEffect } from "react";
 import { CheckBox } from "react-native-elements";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { RequestedItem } from "../firebase/models/RequestedItem";
 import { HouseholdContext } from "../context/HouseholdContext";
 import { Household } from "../firebase/models/Household";
-import { User } from "../firebase/models/Users";
 import { getDoc } from "firebase/firestore";
-import { getFirestore } from "firebase/firestore";
+import { EditShoppingListItemPopup } from "../components/EditShoppingListItemPopup";
 
 export const RequestedItemCard = ({ 
     shoppingListId,
-    requestedItemId,
-    requestedItemName, 
-    requestedItemQuantity,
-    requestedItemBrand,
-    isrequestedItemFulfilled,
-    allergens = [],
-    categories = []
+    requestedItem
 }) => {
+    const {
+        id: requestedItemId,
+        name: requestedItemName,
+        brand: requestedItemBrand,
+        quantityRequested: requestedItemQuantity,
+        requestFullfilled: isrequestedItemFulfilled,
+        allergens = [],
+        categories = [],
+    } = requestedItem;
     const { householdId } = useContext(HouseholdContext);
     const [isChecked, setIsChecked] = useState(isrequestedItemFulfilled);
     const [dietaryWarnings, setDietaryWarnings] = useState([]);
+    const [showEditPopup, setShowEditPopup] = useState(false);
 
     useEffect(() => {
         checkDietaryRestrictions();
@@ -62,7 +65,7 @@ export const RequestedItemCard = ({
                             const allergensToCheck = restrictionMappings[normalizedRestriction] || [normalizedRestriction];
                             
                             // Check allergens
-                            const allergenMatch = allergens.some(allergen => {
+                            const allergenMatch = allergens === "Unknown" ? false : allergens.some(allergen => {
                                 const normalizedAllergen = allergen.toLowerCase().replace(/[-\s]/g, '');
                                 return allergensToCheck.some(check => 
                                     normalizedAllergen === check || // Exact match
@@ -72,7 +75,7 @@ export const RequestedItemCard = ({
                             });
 
                             // Check categories
-                            const categoryMatch = categories.some(category => {
+                            const categoryMatch = categories === "Unknown" ? false : categories.some(category => {
                                 const normalizedCategory = category.toLowerCase().replace(/[-\s]/g, '');
                                 return allergensToCheck.some(check => 
                                     normalizedCategory === check || // Exact match
@@ -115,6 +118,14 @@ export const RequestedItemCard = ({
         }
     }
 
+    const handleItemPress = () => {
+        setShowEditPopup(true);
+    }
+
+    const closeEditItemForm = () => {
+        setShowEditPopup(false);
+    };
+    
     return (
         <View style={styles.container}>
             <CheckBox
@@ -123,18 +134,31 @@ export const RequestedItemCard = ({
                 containerStyle={styles.checkboxContainer}
                 checkedColor="#EF2A39"
             />
-            <View style={styles.textContainer}>
-                <Text style={styles.requestedItemName}>{requestedItemName}</Text>
-                {requestedItemBrand !== '' && <Text style={styles.requestedItemBrand}>{requestedItemBrand}</Text>}
-                <Text style={styles.requestedItemQuantity}>Quantity: {requestedItemQuantity}</Text>
-                {dietaryWarnings.length > 0 && (
-                    <View style={styles.warningsContainer}>
-                        {dietaryWarnings.map((warning, index) => (
-                            <Text key={index} style={styles.warningText}>⚠️ {warning}</Text>
-                        ))}
-                    </View>
-                )}
+                <View style={styles.textContainer}>
+                    <Pressable onPress={handleItemPress}>
+                        <Text style={styles.requestedItemName}>{requestedItemName}</Text>
+                        {requestedItemBrand !== '' && <Text style={styles.requestedItemBrand}>{requestedItemBrand}</Text>}
+                        <Text style={styles.requestedItemQuantity}>Quantity: {requestedItemQuantity}</Text>
+                        {dietaryWarnings.length > 0 && (
+                            <View style={styles.warningsContainer}>
+                                {dietaryWarnings.map((warning, index) => (
+                                    <Text key={index} style={styles.warningText}>⚠️ {warning}</Text>
+                                ))}
+                            </View>
+                        )}
+                    </Pressable>
+                </View>
+
+            {/* Popup to edit shopping list item */}
+            {showEditPopup && (
+            <View style={styles.bottomFormOverlay}>
+                <EditShoppingListItemPopup
+                    onClose={closeEditItemForm}
+                    requestedItem={requestedItem}
+                    shoppingListId={shoppingListId}
+                />
             </View>
+            )}
         </View>
     );
 }
@@ -144,11 +168,12 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         padding: 10,
+        paddingLeft: 0,
         backgroundColor: "#fff",
     },
     checkboxContainer: {
-        marginRight: 10,
-        paddingLeft: 0,
+        // paddingLeft: 0,
+        // margin: 10,
     },
     textContainer: {
         flex: 1,
