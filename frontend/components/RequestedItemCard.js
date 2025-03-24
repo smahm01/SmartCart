@@ -125,7 +125,7 @@ export const RequestedItemCard = ({
             />
             <View style={styles.textContainer}>
                 <Text style={styles.requestedItemName}>{requestedItemName}</Text>
-                <Text style={styles.requestedItemBrand}>{requestedItemBrand}</Text>
+                {requestedItemBrand !== '' && <Text style={styles.requestedItemBrand}>{requestedItemBrand}</Text>}
                 <Text style={styles.requestedItemQuantity}>Quantity: {requestedItemQuantity}</Text>
                 {dietaryWarnings.length > 0 && (
                     <View style={styles.warningsContainer}>
@@ -145,18 +145,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
         padding: 10,
         backgroundColor: "#fff",
-        borderRadius: 8,
-        marginVertical: 5,
-        marginHorizontal: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
     checkboxContainer: {
         marginRight: 10,
-        padding: 0,
+        paddingLeft: 0,
     },
     textContainer: {
         flex: 1,
