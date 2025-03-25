@@ -61,8 +61,8 @@ const AllergensPopup = ({ visible, onClose, dietaryData, allergens, recipeId }) 
                 >
                     <Text style={styles.modalTitle}>⚠️ Allergens Information</Text>
                     <View style={styles.allergensList}>
-                        {allergens.length > 0 ? (
-                            allergens.map((allergen, index) => (
+                        {dietaryViolations.length > 0 ? (
+                            dietaryViolations.map((allergen, index) => (
                                 <Text key={index} style={styles.allergenText}>
                                     • {allergen}
                                 </Text>
@@ -72,7 +72,7 @@ const AllergensPopup = ({ visible, onClose, dietaryData, allergens, recipeId }) 
                         )}
                     </View>
                     
-                    {dietaryViolations.length > 0 && (
+                    {/* {dietaryViolations.length > 0 && (
                         <>
                             <Text style={styles.modalSubtitle}>Dietary Restrictions:</Text>
                             <View style={styles.allergensList}>
@@ -83,7 +83,7 @@ const AllergensPopup = ({ visible, onClose, dietaryData, allergens, recipeId }) 
                                 ))}
                             </View>
                         </>
-                    )}
+                    )} */}
                     
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                         <Text style={styles.closeButtonText}>Close</Text>

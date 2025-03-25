@@ -13,6 +13,8 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import Reanimated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
 import { RequestedItem } from "../firebase/models/RequestedItem";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { FindRecipesButton } from "../components/FindRecipesButton";
+
 
 export const ShoppingListContent = ({ route }) => {
   const { householdId } = useContext(HouseholdContext);
@@ -166,7 +168,7 @@ export const ShoppingListContent = ({ route }) => {
                           overshootFriction={5}  // Reduce overshoot
                           onSwipeableWillOpen={() => {
                             // Close previously open swipeable if different from current
-                            if (currentOpenSwipeableRef.current && 
+                            if (currentOpenSwipeableRef.current &&
                               currentOpenSwipeableRef.current !== swipeableRefsMap.current[item.id]) {
                               currentOpenSwipeableRef.current.close();
                             }
@@ -200,6 +202,12 @@ export const ShoppingListContent = ({ route }) => {
               </View>
             )}
           </View>
+          <FindRecipesButton
+            shoppingListName={shoppingListName}
+            shoppingListId={shoppingListId}
+            shoppingListCategory={shoppingListCategory}
+            shoppingListItems={shoppingListItems}
+          />
         </View>
       </TouchableWithoutFeedback>
     </GestureHandlerRootView>
@@ -233,7 +241,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 4,
     paddingHorizontal: 8,
-    alignSelf: "flex-start", 
+    alignSelf: "flex-start",
   },
 
   listCategoryTagText: {
