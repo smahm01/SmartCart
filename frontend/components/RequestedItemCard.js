@@ -1,26 +1,29 @@
 import React, { useContext, useState, useEffect } from "react";
 import { CheckBox } from "react-native-elements";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { RequestedItem } from "../firebase/models/RequestedItem";
 import { HouseholdContext } from "../context/HouseholdContext";
 import { Household } from "../firebase/models/Household";
-import { User } from "../firebase/models/Users";
 import { getDoc } from "firebase/firestore";
-import { getFirestore } from "firebase/firestore";
+import { EditShoppingListItemPopup } from "../components/EditShoppingListItemPopup";
 
 export const RequestedItemCard = ({ 
     shoppingListId,
-    requestedItemId,
-    requestedItemName, 
-    requestedItemQuantity,
-    requestedItemBrand,
-    isrequestedItemFulfilled,
-    allergens = [],
-    categories = []
+    requestedItem
 }) => {
+    const {
+        id: requestedItemId,
+        name: requestedItemName,
+        brand: requestedItemBrand,
+        quantityRequested: requestedItemQuantity,
+        requestFullfilled: isrequestedItemFulfilled,
+        allergens = [],
+        categories = [],
+    } = requestedItem;
     const { householdId } = useContext(HouseholdContext);
     const [isChecked, setIsChecked] = useState(isrequestedItemFulfilled);
     const [dietaryWarnings, setDietaryWarnings] = useState([]);
+    const [showEditPopup, setShowEditPopup] = useState(false);
 
     useEffect(() => {
         checkDietaryRestrictions();
@@ -28,67 +31,68 @@ export const RequestedItemCard = ({
 
     const checkDietaryRestrictions = async () => {
         try {
-          // Debug logging
-          console.log('Checking restrictions with:', {
-            allergens,
-            categories
-          });
-      
-          // Validate inputs
-          const safeAllergens = Array.isArray(allergens) ? allergens : [];
-          const safeCategories = Array.isArray(categories) ? categories : [];
-      
-          const household = await Household.getHousehold(householdId);
-          const warnings = new Set();
-      
-          const allMembers = [...household.admins, ...household.people];
-          
-          const restrictionMappings = {
-            // ... (keep your existing mappings)
-          };
-      
-          for (const memberRef of allMembers) {
-            const userDoc = await getDoc(memberRef);
-            if (userDoc.exists()) {
-              const userData = userDoc.data();
-              const userRestrictions = Array.isArray(userData.dietaryRestrictions)
-                ? userData.dietaryRestrictions
-                : [];
-      
-              if (userRestrictions.length > 0) {
-                for (const restriction of userRestrictions) {
-                  const normalizedRestriction = restriction.toLowerCase().replace(/[-\s]/g, '');
-                  const allergensToCheck = restrictionMappings[normalizedRestriction] || [normalizedRestriction];
-                  
-                  // Safe allergen check
-                  const allergenMatch = safeAllergens.some(allergen => {
-                    const normalizedAllergen = allergen.toLowerCase().replace(/[-\s]/g, '');
-                    return allergensToCheck.some(check => 
-                      normalizedAllergen === check ||
-                      (check.length > 4 && normalizedAllergen.startsWith(check)) ||
-                      (normalizedAllergen.length > 4 && check.startsWith(normalizedAllergen))
-                    );
-                  });
-      
-                  // Safe category check
-                  const categoryMatch = safeCategories.some(category => {
-                    const normalizedCategory = category.toLowerCase().replace(/[-\s]/g, '');
-                    return allergensToCheck.some(check => 
-                      normalizedCategory === check ||
-                      (check.length > 4 && normalizedCategory.startsWith(check)) ||
-                      (normalizedCategory.length > 4 && check.startsWith(normalizedCategory))
-                    );
-                  });
-      
-                  if (allergenMatch || categoryMatch) {
-                    warnings.add(`${userData.name} has a ${restriction} restriction`);
-                  }
+            const household = await Household.getHousehold(householdId);
+            const warnings = new Set(); // Use Set to prevent duplicate warnings
+
+            // Get all household members (both admins and regular members)
+            const allMembers = [...household.admins, ...household.people];
+            
+            // Common dietary restriction mappings
+            const restrictionMappings = {
+                'glutenfree': ['gluten'],
+                'dairyfree': ['dairy', 'milk', 'lactose'],
+                'nutfree': ['nuts', 'peanuts', 'treenuts', 'cashews', 'almonds', 'hazelnuts', 'walnuts', 'macadamia nuts', 'pine nuts', 'pistachios', 'almonds', 'pecans', 'macadamia nuts', 'pine nuts'],
+                'vegetarian': ['meat', 'chicken', 'beef', 'pork', 'fish'],
+                'vegan': ['meat', 'dairy', 'eggs', 'honey'],
+                'halal': ['pork', 'alcohol'],
+                'kosher': ['pork', 'shellfish']
+            };
+
+            // Fetch user data for each member
+            for (const memberRef of allMembers) {
+                const userDoc = await getDoc(memberRef);
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    const userRestrictions = userData.dietaryRestrictions || [];
+
+                    // Check allergens and categories
+                    if (userRestrictions) {
+                        for (const restriction of userRestrictions) {
+                            // Normalize the restriction
+                            const normalizedRestriction = restriction.toLowerCase().replace(/[-\s]/g, '');
+                            
+                            // Get the allergens to check against for this restriction
+                            const allergensToCheck = restrictionMappings[normalizedRestriction] || [normalizedRestriction];
+                            
+                            // Check allergens
+                            const allergenMatch = allergens === "Unknown" ? false : allergens.some(allergen => {
+                                const normalizedAllergen = allergen.toLowerCase().replace(/[-\s]/g, '');
+                                return allergensToCheck.some(check => 
+                                    normalizedAllergen === check || // Exact match
+                                    (check.length > 4 && normalizedAllergen.startsWith(check)) || // Prefix match for longer terms
+                                    (normalizedAllergen.length > 4 && check.startsWith(normalizedAllergen)) // Prefix match in reverse
+                                );
+                            });
+
+                            // Check categories
+                            const categoryMatch = categories === "Unknown" ? false : categories.some(category => {
+                                const normalizedCategory = category.toLowerCase().replace(/[-\s]/g, '');
+                                return allergensToCheck.some(check => 
+                                    normalizedCategory === check || // Exact match
+                                    (check.length > 4 && normalizedCategory.startsWith(check)) || // Prefix match for longer terms
+                                    (normalizedCategory.length > 4 && check.startsWith(normalizedCategory)) // Prefix match in reverse
+                                );
+                            });
+
+                            if (allergenMatch || categoryMatch) {
+                                warnings.add(`${userData.name} has a ${restriction} restriction`);
+                            }
+                        }
+                    }
                 }
-              }
             }
-          }
-      
-          setDietaryWarnings(Array.from(warnings));
+
+            setDietaryWarnings(Array.from(warnings));
         } catch (error) {
           console.error("Error checking dietary restrictions:", error);
           setDietaryWarnings(["Error checking restrictions"]);
@@ -115,6 +119,14 @@ export const RequestedItemCard = ({
         }
     }
 
+    const handleItemPress = () => {
+        setShowEditPopup(true);
+    }
+
+    const closeEditItemForm = () => {
+        setShowEditPopup(false);
+    };
+    
     return (
         <View style={styles.container}>
             <CheckBox
@@ -123,18 +135,31 @@ export const RequestedItemCard = ({
                 containerStyle={styles.checkboxContainer}
                 checkedColor="#EF2A39"
             />
-            <View style={styles.textContainer}>
-                <Text style={styles.requestedItemName}>{requestedItemName}</Text>
-                <Text style={styles.requestedItemBrand}>{requestedItemBrand}</Text>
-                <Text style={styles.requestedItemQuantity}>Quantity: {requestedItemQuantity}</Text>
-                {dietaryWarnings.length > 0 && (
-                    <View style={styles.warningsContainer}>
-                        {dietaryWarnings.map((warning, index) => (
-                            <Text key={index} style={styles.warningText}>⚠️ {warning}</Text>
-                        ))}
-                    </View>
-                )}
+                <View style={styles.textContainer}>
+                    <Pressable onPress={handleItemPress}>
+                        <Text style={styles.requestedItemName}>{requestedItemName}</Text>
+                        {requestedItemBrand !== '' && <Text style={styles.requestedItemBrand}>{requestedItemBrand}</Text>}
+                        <Text style={styles.requestedItemQuantity}>Quantity: {requestedItemQuantity}</Text>
+                        {dietaryWarnings.length > 0 && (
+                            <View style={styles.warningsContainer}>
+                                {dietaryWarnings.map((warning, index) => (
+                                    <Text key={index} style={styles.warningText}>⚠️ {warning}</Text>
+                                ))}
+                            </View>
+                        )}
+                    </Pressable>
+                </View>
+
+            {/* Popup to edit shopping list item */}
+            {showEditPopup && (
+            <View style={styles.bottomFormOverlay}>
+                <EditShoppingListItemPopup
+                    onClose={closeEditItemForm}
+                    requestedItem={requestedItem}
+                    shoppingListId={shoppingListId}
+                />
             </View>
+            )}
         </View>
     );
 }
@@ -144,19 +169,12 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         padding: 10,
+        paddingLeft: 0,
         backgroundColor: "#fff",
-        borderRadius: 8,
-        marginVertical: 5,
-        marginHorizontal: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
     checkboxContainer: {
-        marginRight: 10,
-        padding: 0,
+        // paddingLeft: 0,
+        // margin: 10,
     },
     textContainer: {
         flex: 1,

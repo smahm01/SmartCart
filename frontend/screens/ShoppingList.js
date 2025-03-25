@@ -49,9 +49,10 @@ export const ShoppingList = () => {
       <Text style={styles.upperTitle}>{householdName}</Text>
       <Text style={styles.lowerTitle}>Shopping Lists</Text>
       {/* FlatList of Shopping Lists */}
-      <View>
+      <View style={styles.container}>
         {hasShoppingLists ? (
           <FlatList
+            contentContainerStyle={{ paddingBottom: 100 }}
             data={shoppingLists}
             renderItem={({ item }) => (
               <ListCard
@@ -79,7 +80,7 @@ export const ShoppingList = () => {
           onPress={openCreateShoppingListForm}
         />
       </View>
-      {/* Bottom Sheet to create new shopping list */}
+      {/* Popup to create new shopping list */}
       {showCreateShoppingListForm && (
         <View style={styles.bottomFormOverlay}>
           <CreateShoppingListPopup
