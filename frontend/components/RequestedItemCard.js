@@ -28,72 +28,72 @@ export const RequestedItemCard = ({
 
     const checkDietaryRestrictions = async () => {
         try {
-            const household = await Household.getHousehold(householdId);
-            const warnings = new Set(); // Use Set to prevent duplicate warnings
-
-            // Get all household members (both admins and regular members)
-            const allMembers = [...household.admins, ...household.people];
-            
-            // Common dietary restriction mappings
-            const restrictionMappings = {
-                'glutenfree': ['gluten'],
-                'dairyfree': ['dairy', 'milk', 'lactose'],
-                'nutfree': ['nuts', 'peanuts', 'treenuts', 'cashews', 'almonds', 'hazelnuts', 'walnuts', 'macadamia nuts', 'pine nuts', 'pistachios', 'almonds', 'pecans', 'macadamia nuts', 'pine nuts'],
-                'vegetarian': ['meat', 'chicken', 'beef', 'pork', 'fish'],
-                'vegan': ['meat', 'dairy', 'eggs', 'honey'],
-                'halal': ['pork', 'alcohol'],
-                'kosher': ['pork', 'shellfish']
-            };
-
-            // Fetch user data for each member
-            for (const memberRef of allMembers) {
-                const userDoc = await getDoc(memberRef);
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    const userRestrictions = userData.dietaryRestrictions || [];
-
-                    // Check allergens and categories
-                    if (userRestrictions) {
-                        for (const restriction of userRestrictions) {
-                            // Normalize the restriction
-                            const normalizedRestriction = restriction.toLowerCase().replace(/[-\s]/g, '');
-                            
-                            // Get the allergens to check against for this restriction
-                            const allergensToCheck = restrictionMappings[normalizedRestriction] || [normalizedRestriction];
-                            
-                            // Check allergens
-                            const allergenMatch = allergens.some(allergen => {
-                                const normalizedAllergen = allergen.toLowerCase().replace(/[-\s]/g, '');
-                                return allergensToCheck.some(check => 
-                                    normalizedAllergen === check || // Exact match
-                                    (check.length > 4 && normalizedAllergen.startsWith(check)) || // Prefix match for longer terms
-                                    (normalizedAllergen.length > 4 && check.startsWith(normalizedAllergen)) // Prefix match in reverse
-                                );
-                            });
-
-                            // Check categories
-                            const categoryMatch = categories.some(category => {
-                                const normalizedCategory = category.toLowerCase().replace(/[-\s]/g, '');
-                                return allergensToCheck.some(check => 
-                                    normalizedCategory === check || // Exact match
-                                    (check.length > 4 && normalizedCategory.startsWith(check)) || // Prefix match for longer terms
-                                    (normalizedCategory.length > 4 && check.startsWith(normalizedCategory)) // Prefix match in reverse
-                                );
-                            });
-
-                            if (allergenMatch || categoryMatch) {
-                                warnings.add(`${userData.name} has a ${restriction} restriction`);
-                            }
-                        }
-                    }
+          // Debug logging
+          console.log('Checking restrictions with:', {
+            allergens,
+            categories
+          });
+      
+          // Validate inputs
+          const safeAllergens = Array.isArray(allergens) ? allergens : [];
+          const safeCategories = Array.isArray(categories) ? categories : [];
+      
+          const household = await Household.getHousehold(householdId);
+          const warnings = new Set();
+      
+          const allMembers = [...household.admins, ...household.people];
+          
+          const restrictionMappings = {
+            // ... (keep your existing mappings)
+          };
+      
+          for (const memberRef of allMembers) {
+            const userDoc = await getDoc(memberRef);
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              const userRestrictions = Array.isArray(userData.dietaryRestrictions)
+                ? userData.dietaryRestrictions
+                : [];
+      
+              if (userRestrictions.length > 0) {
+                for (const restriction of userRestrictions) {
+                  const normalizedRestriction = restriction.toLowerCase().replace(/[-\s]/g, '');
+                  const allergensToCheck = restrictionMappings[normalizedRestriction] || [normalizedRestriction];
+                  
+                  // Safe allergen check
+                  const allergenMatch = safeAllergens.some(allergen => {
+                    const normalizedAllergen = allergen.toLowerCase().replace(/[-\s]/g, '');
+                    return allergensToCheck.some(check => 
+                      normalizedAllergen === check ||
+                      (check.length > 4 && normalizedAllergen.startsWith(check)) ||
+                      (normalizedAllergen.length > 4 && check.startsWith(normalizedAllergen))
+                    );
+                  });
+      
+                  // Safe category check
+                  const categoryMatch = safeCategories.some(category => {
+                    const normalizedCategory = category.toLowerCase().replace(/[-\s]/g, '');
+                    return allergensToCheck.some(check => 
+                      normalizedCategory === check ||
+                      (check.length > 4 && normalizedCategory.startsWith(check)) ||
+                      (normalizedCategory.length > 4 && check.startsWith(normalizedCategory))
+                    );
+                  });
+      
+                  if (allergenMatch || categoryMatch) {
+                    warnings.add(`${userData.name} has a ${restriction} restriction`);
+                  }
                 }
+              }
             }
-
-            setDietaryWarnings(Array.from(warnings));
+          }
+      
+          setDietaryWarnings(Array.from(warnings));
         } catch (error) {
-            console.error("Error checking dietary restrictions:", error);
+          console.error("Error checking dietary restrictions:", error);
+          setDietaryWarnings(["Error checking restrictions"]);
         }
-    };
+      };
 
     const handleCheckboxToggle = async () => {
         try {

@@ -1,16 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ActivityIndicator } from "react-native";
 import { BackButton } from "../components/BackButton";
 import { spoonacularAPIKey } from "../firebase/config";
 import { useNavigation } from "@react-navigation/native";
 import AllergensPopup from './AllergensPopup';
+import { HouseholdContext } from "../context/HouseholdContext";
+import { Household } from "../firebase/models/Household";
+import { User } from "../firebase/models/Users";
+
 
 export const RecipeSuggestions = ({ route }) => {
     const { shoppingListName, shoppingListId, shoppingListCategory, shoppingListItems } = route.params;
+    const { householdId, householdName } = useContext(HouseholdContext);
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [hasItems, setHasItems] = useState(false);
     const [isPopupVisible, setIsPopupVisible] = useState(false);
+    const [userAllergens, setUserAllergens] = useState({});
     const togglePopup = () => {
         setIsPopupVisible(!isPopupVisible);
     };
@@ -19,9 +25,42 @@ export const RecipeSuggestions = ({ route }) => {
     useEffect(() => {
         fetchRecipes();
     }, []);
-
+   
     const fetchRecipes = async () => {
         try {
+
+            console.log(householdId);
+            const household = await Household.getHousehold(householdId);
+            const userIds = household.people.map(person => person.id); // or person.ref?.id if needed
+            const userPromises = userIds.map(userId => User.getUser(userId));
+            const usersHousehold = await Promise.all(userPromises);    
+
+            console.log(usersHousehold);
+
+            const newUserAllergens = {}; // Create new object
+
+            for (const user of usersHousehold) {
+                // Skip users with no dietary restrictions or invalid data
+                if (!Array.isArray(user.dietaryRestrictions)) continue;
+                
+                // For each user, store ALL their dietary restrictions
+                newUserAllergens[user.uid] = [...(user.dietaryRestrictions || [])];
+            }
+
+            setUserAllergens(newUserAllergens);
+
+
+            // let newUserAllergens = {};
+            // for (let i = 0; i < usersHousehold.length; i++) {
+            //     for (let j = 0; j < usersHousehold[i].dietaryRestrictions.length; j++) {
+            //         // userallergens should be a json dictionary with allergens for every user in the household
+            //         newUserAllergens[usersHousehold[i].uid] = usersHousehold[i].dietaryRestrictions[j];
+            //     }
+            // }
+            
+            // setUserAllergens(newUserAllergens);
+
+
             let shoppingListItemNames = [];
             for (let i = 0; i < shoppingListItems.length; i++) {
                 shoppingListItemNames.push(shoppingListItems[i].name);
@@ -69,7 +108,7 @@ export const RecipeSuggestions = ({ route }) => {
                 <AllergensPopup
                     visible={isPopupVisible}
                     onClose={togglePopup}
-                    allergens={[]}
+                    allergens={userAllergens}
                 />
             </View>
         );
