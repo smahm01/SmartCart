@@ -17,10 +17,28 @@ export const RecipeSuggestions = ({ route }) => {
     const [hasItems, setHasItems] = useState(false);
     const [isPopupVisible, setIsPopupVisible] = useState(false);
     const [userAllergens, setUserAllergens] = useState({});
-    const togglePopup = () => {
-        setIsPopupVisible(!isPopupVisible);
-    };
+    const [dietaryData, setDietaryData] = useState([]);
+    
     const navigation = useNavigation();
+
+    const togglePopupOff = () => {
+        setIsPopupVisible(false);
+    };
+
+    const togglePopup = async (recipeId) => {
+        try {
+            // Toggle the popup visibility
+            setIsPopupVisible(true);
+    
+            console.log("here")
+            const response = await fetch(`https://api.spoonacular.com/recipes/${recipeId}/information?apiKey=${spoonacularAPIKey}`);
+            const data = await response.json();
+            // Update dietaryData state with the fetched data
+            setDietaryData(data);
+        } catch (error) {
+            console.error('Error fetching allergens data:', error);
+        }
+    };
 
     useEffect(() => {
         fetchRecipes();
@@ -102,13 +120,15 @@ export const RecipeSuggestions = ({ route }) => {
                         {ingredient.original}
                     </Text>
                 ))}
-                <TouchableOpacity onPress={togglePopup} style={styles.allergensButton}>
+                <TouchableOpacity onPress={() => togglePopup(item.id)} style={styles.allergensButton}>
                     <Text style={styles.allergensButtonText}>Allergens</Text>
                 </TouchableOpacity>
                 <AllergensPopup
                     visible={isPopupVisible}
-                    onClose={togglePopup}
+                    onClose={togglePopupOff}
                     allergens={userAllergens}
+                    dietaryData={dietaryData}
+                    recipeId={item.id}
                 />
             </View>
         );

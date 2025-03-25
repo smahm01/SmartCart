@@ -1,21 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
+import { spoonacularAPIKey } from "../firebase/config";
 
+const AllergensPopup = ({ visible, onClose, dietaryData, allergens, recipeId }) => {
+    const slideAnim = React.useRef(new Animated.Value(300)).current;
+    const [dietaryViolations, setDietaryViolations] = useState([]);
 
-const AllergensPopup = ({ visible, onClose, allergens }) => {
-    const slideAnim = React.useRef(new Animated.Value(300)).current; // Start offscreen (300 units below)
+    // Process dietary data when it changes
+    useEffect(() => {
+        if (visible && dietaryData) {
+            const violations = [];
+            
+            if (dietaryData.vegan === false) violations.push("Non-vegan");
+            if (dietaryData.vegetarian === false) violations.push("Non-vegetarian");
+            if (dietaryData.glutenFree === false) violations.push("Contains gluten");
+            if (dietaryData.dairyFree === false) violations.push("Contains dairy");
+            if (dietaryData.ketogenic === false) violations.push("Non-ketogenic");
+            if (dietaryData.lowFodmap === false) violations.push("Not low-FODMAP");
 
-    React.useEffect(() => {
+            if (dietaryData.diets?.length > 0) {
+                violations.push(...dietaryData.diets.map(diet => `Contains ${diet.toLowerCase()}`));
+            }
+
+            setDietaryViolations(violations);
+        } else {
+            setDietaryViolations([]);
+        }
+    }, [visible, dietaryData]);
+
+    useEffect(() => {
         if (visible) {
-            // Slide up when visible
             Animated.timing(slideAnim, {
-                toValue: 0, // Slide to the original position
-                duration: 300, // Animation duration
+                toValue: 0,
+                duration: 300,
                 easing: Easing.out(Easing.ease),
-                useNativeDriver: true, // Use native driver for better performance
+                useNativeDriver: true,
             }).start();
         } else {
-            // Reset position when not visible
             slideAnim.setValue(300);
         }
     }, [visible]);
@@ -50,6 +71,20 @@ const AllergensPopup = ({ visible, onClose, allergens }) => {
                             <Text style={styles.noAllergensText}>No allergens detected for this recipe.</Text>
                         )}
                     </View>
+                    
+                    {dietaryViolations.length > 0 && (
+                        <>
+                            <Text style={styles.modalSubtitle}>Dietary Restrictions:</Text>
+                            <View style={styles.allergensList}>
+                                {dietaryViolations.map((violation, index) => (
+                                    <Text key={`diet-${index}`} style={styles.allergenText}>
+                                        • {violation}
+                                    </Text>
+                                ))}
+                            </View>
+                        </>
+                    )}
+                    
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                         <Text style={styles.closeButtonText}>Close</Text>
                     </TouchableOpacity>
@@ -58,6 +93,8 @@ const AllergensPopup = ({ visible, onClose, allergens }) => {
         </Modal>
     );
 };
+
+
 
 const styles = StyleSheet.create({
     modalOverlay: {
