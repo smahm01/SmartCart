@@ -1,5 +1,6 @@
 import { firestore } from '../config';
 import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, getFirestore, DocumentReference } from "firebase/firestore";
+import { auth } from '../config';
 
 class Household {
     constructor(name, admins = [], people = [], id = null) {
@@ -148,6 +149,134 @@ class Household {
         }
       } catch (error) {
         console.error("Error getting household:", error);
+        throw error;
+      }
+    }
+
+    static async removeMember(householdId, userId, db = getFirestore()) {
+      try {
+        const householdDocRef = doc(db, `households/${householdId}`);
+        const userDocRef = doc(db, `users/${userId}`);
+        
+        const householdDoc = await getDoc(householdDocRef);
+        if (!householdDoc.exists()) {
+          throw new Error('Household not found');
+        }
+
+        const householdData = householdDoc.data();
+        const people = householdData.people || [];
+        const admins = householdData.admins || [];
+        
+        // Check if the current user is an admin
+        const currentUserId = auth.currentUser.uid;
+        const isCurrentUserAdmin = admins.some(adminRef => adminRef.id === currentUserId);
+        if (!isCurrentUserAdmin) {
+          throw new Error('Only administrators can remove members');
+        }
+
+        // Remove user from both people and admins arrays
+        const updatedPeople = people.filter(person => person.id !== userId);
+        const updatedAdmins = admins.filter(admin => admin.id !== userId);
+
+        // Update the household document
+        await updateDoc(householdDocRef, {
+          people: updatedPeople,
+          admins: updatedAdmins
+        });
+
+        return {
+          success: true,
+          householdId: householdId
+        };
+      } catch (error) {
+        console.error('Error removing member:', error);
+        throw error;
+      }
+    }
+
+    static async promoteToAdmin(householdId, userId, db = getFirestore()) {
+      try {
+        const householdDocRef = doc(db, `households/${householdId}`);
+        const userDocRef = doc(db, `users/${userId}`);
+        
+        const householdDoc = await getDoc(householdDocRef);
+        if (!householdDoc.exists()) {
+          throw new Error('Household not found');
+        }
+
+        const householdData = householdDoc.data();
+        const people = householdData.people || [];
+        const admins = householdData.admins || [];
+        
+        // Check if the current user is an admin
+        const currentUserId = auth.currentUser.uid;
+        const isCurrentUserAdmin = admins.some(adminRef => adminRef.id === currentUserId);
+        if (!isCurrentUserAdmin) {
+          throw new Error('Only administrators can promote members to admin');
+        }
+
+        // Check if user is already an admin
+        if (admins.some(adminRef => adminRef.id === userId)) {
+          throw new Error('User is already an admin');
+        }
+
+        // Add user to admins array
+        const updatedAdmins = [...admins, userDocRef];
+
+        // Update the household document
+        await updateDoc(householdDocRef, {
+          admins: updatedAdmins
+        });
+
+        return {
+          success: true,
+          householdId: householdId
+        };
+      } catch (error) {
+        console.error('Error promoting member:', error);
+        throw error;
+      }
+    }
+
+    static async demoteFromAdmin(householdId, userId, db = getFirestore()) {
+      try {
+        const householdDocRef = doc(db, `households/${householdId}`);
+        const userDocRef = doc(db, `users/${userId}`);
+        
+        const householdDoc = await getDoc(householdDocRef);
+        if (!householdDoc.exists()) {
+          throw new Error('Household not found');
+        }
+
+        const householdData = householdDoc.data();
+        const admins = householdData.admins || [];
+        
+        // Check if the current user is an admin
+        const currentUserId = auth.currentUser.uid;
+        const isCurrentUserAdmin = admins.some(adminRef => adminRef.id === currentUserId);
+        if (!isCurrentUserAdmin) {
+          throw new Error('Only administrators can demote admins');
+        }
+
+        // Check if user is an admin
+        if (!admins.some(adminRef => adminRef.id === userId)) {
+          throw new Error('User is not an admin');
+        }
+
+        // Remove user from admins array
+        const updatedAdmins = admins.filter(admin => admin.id !== userId);
+
+        // Update the household document
+        await updateDoc(householdDocRef, {
+          admins: updatedAdmins
+        });
+
+        return {
+          success: true,
+          householdId: householdId
+        };
+      } catch (error) {
+        console.error('Error demoting admin:', error);
         throw error;
       }
     }
