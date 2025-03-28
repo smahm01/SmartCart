@@ -25,6 +25,7 @@
     "axios": "1.7.9",
     "expo": "52.0.36",
     "expo-camera": "16.0.17",
+    "expo-image-picker": "^16.0.6",
     "expo-status-bar": "2.0.1",
     "firebase": "^10.13.2",
     "firebase-admin": "^12.7.0",
