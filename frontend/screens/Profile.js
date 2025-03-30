@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, StyleSheet, ScrollView, Pressable, Image, Alert } from "react-native";
-import { auth } from "../firebase/config";
+import { auth, storage } from "../firebase/config";
 import { User } from "../firebase/models/Users";
 import { TextInput } from "react-native-gesture-handler";
 import { FontAwesome } from "@expo/vector-icons";
 import { updateEmail } from "firebase/auth";
+import * as ImagePicker from 'expo-image-picker';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const DIETARY_OPTIONS = [
   "Gluten-Free", "Lactose-Free", "Low-Sodium", "Low-FODMAP", "Diabetic-Friendly",
@@ -29,10 +31,125 @@ export const Profile = () => {
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
 
   useEffect(() => {
     fetchUserData();
+    requestPermissions();
   }, []);
+
+  const requestPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+    
+    if (status !== 'granted' || cameraStatus !== 'granted') {
+      Alert.alert('Sorry, we need camera and photo library permissions to make this work!');
+      return;
+    }
+  };
+
+  const pickImage = async (useCamera = false) => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
+
+      if (!result.canceled) {
+        await uploadImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image. Please try again.");
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
+
+      if (!result.canceled) {
+        await uploadImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error taking photo:", error);
+      Alert.alert("Error", "Failed to take photo. Please try again.");
+    }
+  };
+
+  const uploadImage = async (uri) => {
+    try {
+      console.log("Starting image upload process...");
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      console.log("Image blob created successfully");
+      
+      // Create a unique filename
+      const filename = `profile_${user.uid}_${Date.now()}.jpg`;
+      console.log("Creating storage reference for:", filename);
+      const storageRef = ref(storage, `profile_images/${user.uid}/${filename}`);
+      
+      // Upload the image
+      console.log("Starting upload to Firebase Storage...");
+      await uploadBytes(storageRef, blob);
+      console.log("Upload completed successfully");
+      
+      // Get the download URL
+      console.log("Getting download URL...");
+      const downloadURL = await getDownloadURL(storageRef);
+      console.log("Download URL obtained:", downloadURL);
+      
+      // Update user profile with new image URL
+      console.log("Updating user profile with new image URL...");
+      const updatedUser = {
+        ...user,
+        profileImage: downloadURL
+      };
+      await User.updateUser(user.uid, updatedUser);
+      
+      setUser(updatedUser);
+      setProfileImage(downloadURL);
+      Alert.alert("Success", "Profile picture updated successfully");
+    } catch (error) {
+      console.error("Detailed error uploading image:", error);
+      if (error.code === 'storage/unauthorized') {
+        Alert.alert("Error", "You don't have permission to upload images. Please try signing in again.");
+      } else if (error.code === 'storage/canceled') {
+        Alert.alert("Error", "Upload was canceled. Please try again.");
+      } else if (error.code === 'storage/unknown') {
+        Alert.alert("Error", "An unknown error occurred. Please check your internet connection and try again.");
+      } else {
+        Alert.alert("Error", "Failed to upload image. Please try again.");
+      }
+    }
+  };
+
+  const showImagePickerOptions = () => {
+    Alert.alert(
+      "Update Profile Picture",
+      "Choose an option",
+      [
+        {
+          text: "Take Photo",
+          onPress: takePhoto
+        },
+        {
+          text: "Choose from Library",
+          onPress: () => pickImage()
+        },
+        {
+          text: "Cancel",
+          style: "cancel"
+        }
+      ]
+    );
+  };
 
   const fetchUserData = async () => {
     try {
@@ -41,6 +158,7 @@ export const Profile = () => {
       setDietaryRestrictions(currentUser.dietaryRestrictions || []);
       setNewEmail(currentUser.email || "");
       setNewPhone(currentUser.phoneNumber || "");
+      setProfileImage(currentUser.profileImage || null);
     } catch (error) {
       console.error("Error fetching user data:", error);
     } finally {
@@ -174,9 +292,16 @@ export const Profile = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profileHeader}>
-        <View style={styles.avatarContainer}>
-          <FontAwesome name="user-circle" size={100} color="#EF2A39" />
-        </View>
+        <Pressable onPress={showImagePickerOptions} style={styles.avatarContainer}>
+          {profileImage ? (
+            <Image
+              source={{ uri: profileImage }}
+              style={styles.profileImage}
+            />
+          ) : (
+            <FontAwesome name="user-circle" size={100} color="#EF2A39" />
+          )}
+        </Pressable>
         <Text style={styles.userName}>{user?.name}</Text>
       </View>
 
@@ -339,6 +464,13 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginBottom: 15,
+    position: 'relative',
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#f0f0f0',
   },
   userName: {
     fontSize: 24,
