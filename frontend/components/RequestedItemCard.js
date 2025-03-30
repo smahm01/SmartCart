@@ -94,9 +94,10 @@ export const RequestedItemCard = ({
 
             setDietaryWarnings(Array.from(warnings));
         } catch (error) {
-            console.error("Error checking dietary restrictions:", error);
+          console.error("Error checking dietary restrictions:", error);
+          setDietaryWarnings(["Error checking restrictions"]);
         }
-    };
+      };
 
     const handleCheckboxToggle = async () => {
         try {
