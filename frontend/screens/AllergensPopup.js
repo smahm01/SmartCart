@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import { spoonacularAPIKey } from "../firebase/config";
 
-const AllergensPopup = ({ visible, onClose, dietaryData, allergens, recipeId }) => {
+const AllergensPopup = ({ visible, onClose, dietaryData, usersDietary }) => {
     const slideAnim = React.useRef(new Animated.Value(300)).current;
     const [dietaryViolations, setDietaryViolations] = useState([]);
 
@@ -19,7 +19,7 @@ const AllergensPopup = ({ visible, onClose, dietaryData, allergens, recipeId }) 
             if (dietaryData.lowFodmap === false) violations.push("Not low-FODMAP");
 
             if (dietaryData.diets?.length > 0) {
-                violations.push(...dietaryData.diets.map(diet => `Contains ${diet.toLowerCase()}`));
+                violations.push(...dietaryData.diets.map(diet => `${diet.toLowerCase()}`));
             }
 
             setDietaryViolations(violations);
@@ -59,7 +59,7 @@ const AllergensPopup = ({ visible, onClose, dietaryData, allergens, recipeId }) 
                         },
                     ]}
                 >
-                    <Text style={styles.modalTitle}>⚠️ Allergens Information</Text>
+                    <Text style={styles.modalTitle}>⚠️ Dietary Restrictions</Text>
                     <View style={styles.allergensList}>
                         {dietaryViolations.length > 0 ? (
                             dietaryViolations.map((allergen, index) => (
@@ -68,22 +68,9 @@ const AllergensPopup = ({ visible, onClose, dietaryData, allergens, recipeId }) 
                                 </Text>
                             ))
                         ) : (
-                            <Text style={styles.noAllergensText}>No allergens detected for this recipe.</Text>
+                            <Text style={styles.noAllergensText}>Checking allergens for this recipe...</Text>
                         )}
                     </View>
-                    
-                    {/* {dietaryViolations.length > 0 && (
-                        <>
-                            <Text style={styles.modalSubtitle}>Dietary Restrictions:</Text>
-                            <View style={styles.allergensList}>
-                                {dietaryViolations.map((violation, index) => (
-                                    <Text key={`diet-${index}`} style={styles.allergenText}>
-                                        • {violation}
-                                    </Text>
-                                ))}
-                            </View>
-                        </>
-                    )} */}
                     
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                         <Text style={styles.closeButtonText}>Close</Text>

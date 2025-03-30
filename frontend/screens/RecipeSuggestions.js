@@ -28,11 +28,13 @@ export const RecipeSuggestions = ({ route }) => {
     const togglePopup = async (recipeId) => {
         try {
             // Toggle the popup visibility
-            setIsPopupVisible(true);
+            
     
             console.log("here")
             const response = await fetch(`https://api.spoonacular.com/recipes/${recipeId}/information?apiKey=${spoonacularAPIKey}`);
             const data = await response.json();
+
+            setIsPopupVisible(true);
             // Update dietaryData state with the fetched data
             setDietaryData(data);
         } catch (error) {
@@ -55,17 +57,19 @@ export const RecipeSuggestions = ({ route }) => {
 
             console.log(usersHousehold);
 
-            const newUserAllergens = {}; // Create new object
+            const newUserDietary = {}; // Create new object
 
             for (const user of usersHousehold) {
                 // Skip users with no dietary restrictions or invalid data
                 if (!Array.isArray(user.dietaryRestrictions)) continue;
                 
                 // For each user, store ALL their dietary restrictions
-                newUserAllergens[user.uid] = [...(user.dietaryRestrictions || [])];
+                newUserDietary[user.uid] = [...(user.dietaryRestrictions || [])];
             }
 
-            setUserAllergens(newUserAllergens);
+            setUserAllergens(newUserDietary);
+
+            console.log(newUserDietary);
 
 
             // let newUserAllergens = {};
@@ -121,12 +125,12 @@ export const RecipeSuggestions = ({ route }) => {
                     </Text>
                 ))}
                 <TouchableOpacity onPress={() => togglePopup(item.id)} style={styles.allergensButton}>
-                    <Text style={styles.allergensButtonText}>Allergens</Text>
+                    <Text style={styles.allergensButtonText}>Dietary Info</Text>
                 </TouchableOpacity>
                 <AllergensPopup
                     visible={isPopupVisible}
                     onClose={togglePopupOff}
-                    allergens={userAllergens}
+                    usersDietary={userAllergens}
                     dietaryData={dietaryData}
                     recipeId={item.id}
                 />
