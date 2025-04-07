@@ -79,11 +79,19 @@ export const AddItemShoppingList = ({ route }) => {
                 }
 
                 //categories is a string of words separated by commas, turn it into a array or set to "Unknown" if empty
-                products[i].categories === "" ? products[i].categories = "Unknown" : products[i].categories = products[i].categories.split(',');
+                products[i].categories === "" 
+                  ? products[i].categories = "Unknown" 
+                  : products[i].categories = products[i].categories.replaceAll("en:", "")
+                      .split(',')
+                      .map((a) => a.trim());
                 console.log('categories: ' + products[i].categories);
                 
                 //allergens is a string of words separated by commas, turn it into a array or set to "Unknown" if empty
-                products[i].allergens === "" ? products[i].allergens = "Unknown" : products[i].allergens = products[i].allergens.split(',');
+                products[i].allergens === "" 
+                  ? products[i].allergens = "Unknown" 
+                  : products[i].allergens = products[i].allergens.replaceAll("en:", "")
+                      .split(',')
+                      .map((a) => a.trim());
                 console.log('allergens: ' + products[i].allergens);
                 
                 // if any nutrition value is undefined, set to "Unknown"
