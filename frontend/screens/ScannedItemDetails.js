@@ -61,6 +61,8 @@ export const ScannedItemDetails = ({ route }) => {
       );
 
       const data = response.data.product;
+      console.log(response.status);
+      console.log(response.statusText);
       console.log(response.data);
 
       if (data) {
